@@ -6,9 +6,9 @@ import (
 	"os"
 	"strconv"
 	"sync"
+	"time"
 )
 
-var wg sync.WaitGroup
 var contFib bool
 var l int
 
@@ -21,7 +21,6 @@ type fib struct {
 
 func (f *fib) fibTree(n int) *fib {
 	if f == nil {
-		fmt.Println("insert：", n)
 		if n != 1 && n != 0 {
 			f = &fib{number: n, level: l, calc: true}
 		} else {
@@ -47,22 +46,31 @@ func (f *fib) printTree() {
 	}
 }
 
-func (f *fib) printTreeGo() {
-	wg.Done()
-	wg.Wait()
-	fmt.Println(f)
-	if f.left != nil {
-		wg.Add(1)
-		go f.left.printTreeGo()
+func (f *fib) printTreeGo(n *sync.WaitGroup, c chan int) {
+	var wg sync.WaitGroup
+	if f.left != nil && f.right != nil {
+		c1 := make(chan int, 1)
+		c2 := make(chan int, 1)
+		if f.left != nil {
+			wg.Add(1)
+			go f.left.printTreeGo(&wg, c1)
+		}
+		if f.right != nil {
+			wg.Add(1)
+			go f.right.printTreeGo(&wg, c2)
+		}
+		wg.Wait()
+		v1 := <-c1
+		v2 := <-c2
+		c <- v1 + v2
+	} else {
+		c <- f.number
 	}
-	if f.right != nil {
-		wg.Add(1)
-		go f.right.printTreeGo()
-	}
+	//fmt.Println(f)
+	n.Done()
 }
 
 func (f *fib) nodeCalc() *fib {
-	fmt.Println("nodeCalc")
 	contFib = false
 	if f.left != nil && f.right != nil {
 		if f.left.calc == false && f.right.calc == false {
@@ -94,21 +102,31 @@ func main() {
 			n, err := strconv.Atoi(scanner.Text())
 			if err != nil {
 				fmt.Println("数値を入力してください")
+				fmt.Println(n)
 			} else {
+				var wg sync.WaitGroup
+				c := make(chan int, 1)
 				f = f.fibTree(n)
-				f.printTree()
+				//f.printTree()
 				fmt.Println("printTreeGo")
 				wg.Add(1)
-				f.printTreeGo()
-				/*
-					for {
-						f = f.nodeCalc()
-						if contFib == false {
-							break
-						}
+				t1 := time.Now()
+				f.printTreeGo(&wg, c)
+				wg.Wait()
+				t2 := time.Now()
+				v := <-c
+				fmt.Println(v)
+				fmt.Println(t2.Sub(t1))
+				t3 := time.Now()
+				for {
+					f = f.nodeCalc()
+					if contFib == false {
+						break
 					}
-					f.printTree()
-				*/
+				}
+				t4 := time.Now()
+				fmt.Println(f.number)
+				fmt.Println(t4.Sub(t3))
 			}
 		}
 		l = 0
