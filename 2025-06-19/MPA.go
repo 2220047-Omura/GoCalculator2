@@ -47,6 +47,7 @@ func MakeListP(NumListA []string, NumListB []string) []int {
 func main() {
 	for {
 		scanner := bufio.NewScanner(os.Stdin)
+		print("(桁数)(演算子)(桁数)：")
 		scanner.Scan()
 		if scanner.Text() == "" {
 			break
@@ -79,7 +80,7 @@ func main() {
 				for i := 1; i <= l2; i++ {
 					AnsListP3 = append(AnsListP3, AnsListP2[l2-i])
 				}
-				fmt.Println("Answer:", AnsListP3)
+				fmt.Println("Answer:", AnsListP3, "\n")
 			}
 
 			/*
