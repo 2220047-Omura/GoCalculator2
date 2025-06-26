@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"strconv"
-	"sync"
 	"time"
 )
 
@@ -48,20 +47,23 @@ func (f *fib) printTree() {
 	}
 }
 
-func (f *fib) printTreeGo(n *sync.WaitGroup, c chan float64) {
-	var wg sync.WaitGroup
+// func (f *fib) printTreeGo(n *sync.WaitGroup, c chan float64) {
+func (f *fib) printTreeGo(c chan float64) {
+	//var wg sync.WaitGroup
 	if f.left != nil && f.right != nil {
 		c1 := make(chan float64, 1)
 		c2 := make(chan float64, 1)
 		if f.left != nil {
-			wg.Add(1)
-			go f.left.printTreeGo(&wg, c1)
+			//wg.Add(1)
+			//go f.left.printTreeGo(&wg, c1)
+			go f.left.printTreeGo(c1)
 		}
 		if f.right != nil {
-			wg.Add(1)
-			go f.right.printTreeGo(&wg, c2)
+			//wg.Add(1)
+			//go f.right.printTreeGo(&wg, c2)
+			go f.right.printTreeGo(c2)
 		}
-		wg.Wait()
+		//wg.Wait()
 		v1 := <-c1
 		v2 := <-c2
 		c <- v1 + v2
@@ -69,7 +71,7 @@ func (f *fib) printTreeGo(n *sync.WaitGroup, c chan float64) {
 		c <- f.number
 	}
 	//fmt.Println(f)
-	n.Done()
+	//n.Done()
 }
 
 func (f *fib) nodeCalc() *fib {
@@ -106,16 +108,17 @@ func main() {
 				fmt.Println("数値を入力してください")
 				fmt.Println(n)
 			} else {
-				var wg sync.WaitGroup
+				//var wg sync.WaitGroup
 				c := make(chan float64, 1)
 				m := float64(n)
 				f = f.fibTree(m)
 				//f.printTree()
 				fmt.Println("printTreeGo")
-				wg.Add(1)
+				//wg.Add(1)
 				t1 := time.Now()
-				f.printTreeGo(&wg, c)
-				wg.Wait()
+				//f.printTreeGo(&wg, c)
+				f.printTreeGo(c)
+				//wg.Wait()
 				t2 := time.Now()
 				v := <-c
 				fmt.Println(v)
