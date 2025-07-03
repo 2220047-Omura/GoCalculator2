@@ -59,7 +59,7 @@ func main() {
 				}
 				wg.Wait()
 				t2 := time.Now()
-				var Ans1 float64 = (float64(Pi1) / float64(n)) * 4
+				var Ans1 float64 = (float64(Pi1) / float64(n)) * 4 / 10000
 				fmt.Println(Ans1)
 				fmt.Println(t2.Sub(t1))
 				fmt.Println("MC")
@@ -68,7 +68,7 @@ func main() {
 					MC()
 				}
 				t4 := time.Now()
-				var Ans2 float64 = (float64(Pi2) / float64(n)) * 4
+				var Ans2 float64 = (float64(Pi2) / float64(n)) * 4 / 10000
 				fmt.Println(Ans2)
 				fmt.Println(t4.Sub(t3), "\n")
 			}
