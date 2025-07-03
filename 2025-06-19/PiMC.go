@@ -15,13 +15,17 @@ var wg sync.WaitGroup
 var Pi1, Pi2 int
 
 func MCgo() {
-	x := rand.Float64()
-	X := math.Pow(x, 2)
-	y := rand.Float64()
-	Y := math.Pow(y, 2)
-	if X+Y <= 1 {
-		Pi1 += 1
+	local_Pi := 0
+	for i := 0; i < 10000; i++ {
+		x := rand.Float64()
+		X := math.Pow(x, 2)
+		y := rand.Float64()
+		Y := math.Pow(y, 2)
+		if X+Y <= 1 {
+			local_Pi += 1
+		}
 	}
+	Pi1 += local_Pi
 	wg.Done()
 }
 
@@ -38,6 +42,7 @@ func MC() {
 func main() {
 	for {
 		scanner := bufio.NewScanner(os.Stdin)
+		fmt.Println("数値を入力してください")
 		scanner.Scan()
 		if scanner.Text() == "" {
 			break
@@ -59,7 +64,7 @@ func main() {
 				fmt.Println(t2.Sub(t1))
 				fmt.Println("MC")
 				t3 := time.Now()
-				for i := 0; i < n; i++ {
+				for i := 0; i < n*10000; i++ {
 					MC()
 				}
 				t4 := time.Now()
