@@ -30,12 +30,14 @@ func MCgo() {
 }
 
 func MC() {
-	x := rand.Float64()
-	X := math.Pow(x, 2)
-	y := rand.Float64()
-	Y := math.Pow(y, 2)
-	if X+Y <= 1 {
-		Pi2 += 1
+	for i := 0; i < 10000; i++ {
+		x := rand.Float64()
+		X := math.Pow(x, 2)
+		y := rand.Float64()
+		Y := math.Pow(y, 2)
+		if X+Y <= 1 {
+			Pi2 += 1
+		}
 	}
 }
 
@@ -64,7 +66,7 @@ func main() {
 				fmt.Println(t2.Sub(t1))
 				fmt.Println("MC")
 				t3 := time.Now()
-				for i := 0; i < n*10000; i++ {
+				for i := 0; i < n; i++ {
 					MC()
 				}
 				t4 := time.Now()
