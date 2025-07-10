@@ -41,4 +41,5 @@ func main() {
 
 	r3.Add(r1, r2)
 	fmt.Printf("big.Rat Sum: %s\n", r3.String()) // 5/6
+
 }
