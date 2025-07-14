@@ -1,11 +1,7 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
-	"math/rand"
-	"os"
-	"strconv"
 	"time"
 
 	"gonum.org/v1/gonum/mat"
@@ -154,23 +150,24 @@ func LU(A mat.Matrix, L *mat.Dense, U *mat.Dense) {
 
 func main() {
 	for {
+		/*
+			scanner := bufio.NewScanner(os.Stdin)
+			print("正方行列Aのサイズを入力してください：")
+			scanner.Scan()
+			if scanner.Text() == "" {
+				break
+			}
+			n, _ := strconv.Atoi(scanner.Text())
+			var x []float64
+			for i := 0; i < n*n; i++ {
+				r := rand.Intn(100)
+				x = append(x, float64(r))
+			}
+			A := mat.NewDense(n, n, x)
+		*/
 
-		scanner := bufio.NewScanner(os.Stdin)
-		print("正方行列Aのサイズを入力してください：")
-		scanner.Scan()
-		if scanner.Text() == "" {
-			break
-		}
-		n, _ := strconv.Atoi(scanner.Text())
-		var x []float64
-		for i := 0; i < n*n; i++ {
-			r := rand.Intn(100)
-			x = append(x, float64(r))
-		}
-		A := mat.NewDense(n, n, x)
-
-		//x := []float64{1, 2, 3, 4, 5, 6, 7, 8, 9}
-		//A := mat.NewDense(3, 3, x)
+		x := []float64{1, 2, 3, 4, 5, 6, 7, 8, 9}
+		A := mat.NewDense(3, 3, x)
 		//x := []float64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}
 		//A := mat.NewDense(4, 4, x)
 		//matPrint(A)
@@ -186,8 +183,8 @@ func main() {
 		t1 := time.Now()
 		LUgo(A, L1, U1)
 		fmt.Println("LUgo:", time.Now().Sub(t1))
-		//matPrint(L1)
-		//matPrint(U1)
+		matPrint(L1)
+		matPrint(U1)
 
 		L2 := mat.NewDense(r, c, nil)
 		U2 := mat.NewDense(r, c, nil)
@@ -202,6 +199,6 @@ func main() {
 		//matPrint(U2)
 		fmt.Println("")
 
-		//break
+		break
 	}
 }
