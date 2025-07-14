@@ -7,14 +7,15 @@ import (
 	"math/rand"
 	"os"
 	"strconv"
-	"sync"
+
+	//"sync"
 	"time"
 )
 
-var wg sync.WaitGroup
-var Pi1, Pi2 int
+// var wg sync.WaitGroup
+var Pi1, Pi2, Pi1Sum int
 
-func MCgo() {
+func MCgo(c chan int) {
 	local_Pi := 0
 	X := new(big.Float).SetPrec(1024)
 	Y := new(big.Float).SetPrec(1024)
@@ -32,8 +33,8 @@ func MCgo() {
 			local_Pi += 1
 		}
 	}
-	Pi1 += local_Pi
-	wg.Done()
+	c <- local_Pi
+	//wg.Done()
 }
 
 func MC() {
@@ -68,14 +69,17 @@ func main() {
 				fmt.Println("数値を入力してください")
 			} else {
 				fmt.Println("MCgo")
-				wg.Add(n)
+				//wg.Add(n)
+				c := make(chan int, n)
 				t1 := time.Now()
 				for i := 0; i < n; i++ {
-					go MCgo()
+					go MCgo(c)
+					Pi1 = <-c
+					Pi1Sum += Pi1Sum
 				}
-				wg.Wait()
+				//wg.Wait()
 				t2 := time.Now()
-				var Ans1 float64 = (float64(Pi1) / float64(n)) * 4 / 10000
+				var Ans1 float64 = (float64(Pi1Sum) / float64(n)) * 4 / 10000
 				fmt.Println(Ans1)
 				fmt.Println(t2.Sub(t1))
 				fmt.Println("MC")
@@ -89,6 +93,6 @@ func main() {
 				fmt.Println(t4.Sub(t3), "\n")
 			}
 		}
-		Pi1, Pi2 = 0, 0
+		Pi1, Pi2, Pi1Sum = 0, 0, 0
 	}
 }
