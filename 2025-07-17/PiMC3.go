@@ -12,9 +12,9 @@ import (
 
 // var wg sync.WaitGroup
 var Pi1, Pi2, Pi3, Pi3Sum, Pi4, Pi4Sum int
-var plot = 100000000 //打つ点の数
-var t = 1 //スレッド数
-var n = plot / t //スレッド内の必要ループ数
+var plot = 10000000 //打つ点の数
+var t = 4           //スレッド数
+var n = plot / t    //スレッド内の必要ループ数
 
 func MCFloat() {
 	for i := 0; i < n; i++ {
@@ -85,8 +85,8 @@ func MCgoBig(c chan int) {
 }
 
 func main() {
-	c1 := make(chan int, n)
-	c2 := make(chan int, n)
+	c1 := make(chan int, t)
+	c2 := make(chan int, t)
 
 	fmt.Println("MCFloat")
 	t1 := time.Now()
@@ -121,7 +121,7 @@ func main() {
 	var Ans3 float64 = (float64(Pi3Sum) / float64(plot)) * 4
 	fmt.Println(Ans3)
 	fmt.Println(t6.Sub(t5), "\n")
-	
+
 	fmt.Println("MCgoBig")
 	t7 := time.Now()
 	for i := 0; i < t; i++ {
@@ -135,6 +135,4 @@ func main() {
 	var Ans4 float64 = (float64(Pi4Sum) / float64(plot)) * 4
 	fmt.Println(Ans4)
 	fmt.Println(t8.Sub(t7), "\n")
-
-	Pi1, Pi2 = 0, 0
 }
