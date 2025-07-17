@@ -87,6 +87,7 @@ func MCgoBig(c chan int) {
 func main() {
 	c1 := make(chan int, t)
 	c2 := make(chan int, t)
+	fmt.Println("\n")
 
 	fmt.Println("MCFloat")
 	t1 := time.Now()
