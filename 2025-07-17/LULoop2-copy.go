@@ -64,27 +64,27 @@ func Uset(A mat.Matrix, L *mat.Dense, U *mat.Dense, Larr *[3][3]Lst, Uarr *[3][3
 func Lset(A mat.Matrix, L *mat.Dense, U *mat.Dense, Larr *[3][3]Lst, Uarr *[3][3]Ust, i int, j int) {
 	if i != j {
 		r, _ := A.Dims()
-		var aij, uij, lij float64
+		var aji, uji, lji float64
 		for k := 0; k < r; k++ {
 			getUij(U, Uarr, j, k)
-			uij = <-Uarr[j][k].c
+			uji = <-Uarr[j][k].c
 			if k != i {
 				getLij(L, Larr, k, i)
-				lij = <-Larr[k][i].c
+				lji = <-Larr[k][i].c
 			} else {
-				lij = 0
+				lji = 0
 			}
-			aij += lij * uij
+			aji += lji * uji
 		}
 		if U.At(i, i) == 0 {
-			lij = 0
+			lji = 0
 		} else {
-			lij = (A.At(j, i) - aij) / U.At(i, i)
+			lji = (A.At(j, i) - aji) / U.At(i, i)
 		}
 		//c1 <- Uij
-		L.Set(j, i, lij)
+		L.Set(j, i, lji)
 		Larr[j][i].flag = true
-		aij = 0
+		aji = 0
 	}
 }
 
