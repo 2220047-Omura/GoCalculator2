@@ -108,7 +108,7 @@ func main() {
 	t2 := time.Now()
 	var Ans1 float64 = (float64(Pi1Sum) / float64(plot)) * 4
 	//fmt.Println(Ans1)
-	fmt.Println("MCgoFloat Ans: ", Ans1, " Time: ", t2.Sub(t1), "\n")
+	fmt.Println("MCFloat Ans: ", Ans1, " Time: ", t2.Sub(t1), "\n")
 
 	//fmt.Println("MCBig")
 	t3 := time.Now()
@@ -122,7 +122,7 @@ func main() {
 	t4 := time.Now()
 	var Ans2 float64 = (float64(Pi2Sum) / float64(plot)) * 4
 	//fmt.Println(Ans2)
-	fmt.Println("MCgoFloat Ans: ", Ans2, " Time: ", t4.Sub(t3), "\n")
+	fmt.Println("MCBig Ans: ", Ans2, " Time: ", t4.Sub(t3), "\n")
 
 	//fmt.Println("MCgoFloat")
 	t5 := time.Now()
@@ -151,5 +151,5 @@ func main() {
 	var Ans4 float64 = (float64(Pi4Sum) / float64(plot)) * 4
 	//fmt.Println(Ans4)
 	//fmt.Println(t8.Sub(t7), "\n")
-	fmt.Println("MCgoFloat Ans: ", Ans4, " Time: ", t8.Sub(t7), "\n")
+	fmt.Println("MCgoBig Ans: ", Ans4, " Time: ", t8.Sub(t7), "\n")
 }
