@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"math/rand"
 	"sync"
 	"time"
 
@@ -10,12 +11,14 @@ import (
 
 var wg sync.WaitGroup
 
+const MaxN = 10
+
 func matPrint(X mat.Matrix) {
 	fa := mat.Formatted(X, mat.Prefix(""), mat.Squeeze())
 	fmt.Printf("%v\n", fa)
 }
 
-func Uset(A *mat.Dense, L *mat.Dense, U *mat.Dense, Lch *[3][3]chan float64, Uch *[3][3]chan float64, i int, j int) {
+func Uset(A *mat.Dense, L *mat.Dense, U *mat.Dense, Lch *[MaxN][MaxN]chan float64, Uch *[MaxN][MaxN]chan float64, i int, j int) {
 	defer wg.Done()
 	r, _ := A.Dims()
 	var aij, uij, lij float64
@@ -43,7 +46,7 @@ func Uset(A *mat.Dense, L *mat.Dense, U *mat.Dense, Lch *[3][3]chan float64, Uch
 	Uch[i][j] <- uij
 }
 
-func Lset(A *mat.Dense, L *mat.Dense, U *mat.Dense, Lch *[3][3]chan float64, Uch *[3][3]chan float64, i int, j int) {
+func Lset(A *mat.Dense, L *mat.Dense, U *mat.Dense, Lch *[MaxN][MaxN]chan float64, Uch *[MaxN][MaxN]chan float64, i int, j int) {
 	defer wg.Done()
 	if i != j {
 		r, _ := A.Dims()
@@ -79,7 +82,7 @@ func Lset(A *mat.Dense, L *mat.Dense, U *mat.Dense, Lch *[3][3]chan float64, Uch
 	}
 }
 
-func LUgo(A *mat.Dense, L *mat.Dense, U *mat.Dense, Lch *[3][3]chan float64, Uch *[3][3]chan float64) {
+func LUgo(A *mat.Dense, L *mat.Dense, U *mat.Dense, Lch *[MaxN][MaxN]chan float64, Uch *[MaxN][MaxN]chan float64) {
 	r, _ := A.Dims()
 	var J int
 	for i := 0; i < r; i++ {
@@ -124,40 +127,49 @@ func LU(A *mat.Dense, L *mat.Dense, U *mat.Dense) {
 }
 
 func main() {
-	/*
-		n := 3
-		var x []float64
-		for i := 0; i < n*n; i++ {
-			r := rand.Intn(100)
-			x = append(x, float64(r))
-		}
-		A := mat.NewDense(n, n, x)
-	*/
 
-	x := []float64{1, 2, 3, 4, 5, 6, 7, 8, 9}
-	A := mat.NewDense(3, 3, x)
+	n := 9
+
+	var x []float64
+	for i := 0; i < n*n; i++ {
+		r := rand.Intn(100)
+		x = append(x, float64(r))
+	}
+	A := mat.NewDense(n, n, x)
+
+	//x := []float64{1, 2, 3, 4, 5, 6, 7, 8, 9}
+	//A := mat.NewDense(3, 3, x)
 	//x := []float64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}
 	//A := mat.NewDense(4, 4, x)
-	//matPrint(A)
+	matPrint(A)
 
-	r, c := A.Dims()
-	L1 := mat.NewDense(r, c, nil)
-	U1 := mat.NewDense(r, c, nil)
-	for i := 0; i < r; i++ {
+	L1 := mat.NewDense(n, n, nil)
+	U1 := mat.NewDense(n, n, nil)
+	for i := 0; i < n; i++ {
 		L1.Set(i, i, 1)
 	}
 
 	t1 := time.Now()
-	var Lch [3][3]chan float64
-	var Uch [3][3]chan float64
-	for i := 0; i < r; i++ {
-		for j := 0; j < r; j++ {
+	var Lch [MaxN][MaxN]chan float64
+	var Uch [MaxN][MaxN]chan float64
+	/*
+		var Lch [][]chan float64
+		var Uch [][]chan float64
+		Lch = make([][]chan float64, n)
+		Uch = make([][]chan float64, n)
+		for i := range Lch {
+			Lch[i] = make([]chan float64, n)
+			Uch[i] = make([]chan float64, n)
+		}
+	*/
+	for i := 0; i < n; i++ {
+		for j := 0; j < n; j++ {
 			Lch[i][j] = make(chan float64, 1)
 			Uch[i][j] = make(chan float64, 1)
 		}
 	}
-	for i := 0; i < r; i++ {
-		for j := 0; j < r; j++ {
+	for i := 0; i < n; i++ {
+		for j := 0; j < n; j++ {
 			if i == j {
 				Lch[i][j] <- 1
 			}
@@ -170,12 +182,19 @@ func main() {
 	LUgo(A, L1, U1, &Lch, &Uch)
 	fmt.Println("LUgo:", time.Now().Sub(t1))
 
-	matPrint(L1)
-	matPrint(U1)
+	Ans := mat.NewDense(n, n, nil)
+	Ans.Product(L1, U1)
+	//matPrint(Ans)
+	Sub := mat.NewDense(n, n, nil)
+	Sub.Sub(Ans, A)
+	//matPrint(Sub)
+	fmt.Println(Sub.Norm(1))
+	//matPrint(L1)
+	//matPrint(U1)
 
-	L2 := mat.NewDense(r, c, nil)
-	U2 := mat.NewDense(r, c, nil)
-	for i := 0; i < r; i++ {
+	L2 := mat.NewDense(n, n, nil)
+	U2 := mat.NewDense(n, n, nil)
+	for i := 0; i < n; i++ {
 		L2.Set(i, i, 1)
 	}
 
