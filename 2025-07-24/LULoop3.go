@@ -11,20 +11,26 @@ import (
 
 var wg sync.WaitGroup
 
-const MaxN = 10
+const size = 300
 
 func matPrint(X mat.Matrix) {
 	fa := mat.Formatted(X, mat.Prefix(""), mat.Squeeze())
 	fmt.Printf("%v\n", fa)
 }
 
-func Uset(A *mat.Dense, L *mat.Dense, U *mat.Dense, Lch *[MaxN][MaxN]chan float64, Uch *[MaxN][MaxN]chan float64, i int, j int) {
+func Uset(A *mat.Dense, L *mat.Dense, U *mat.Dense, Lch *[size][size]chan float64, Uch *[size][size]chan float64, i int, j int) {
 	defer wg.Done()
 	r, _ := A.Dims()
 	var aij, uij, lij float64
 	for k := 0; k < r; k++ {
-		lij = <-Lch[i][k]
-		Lch[i][k] <- lij
+		if k == i {
+			lij = 0
+		} else {
+			lij = <-Lch[i][k]
+			Lch[i][k] <- lij
+		}
+		//lij = <-Lch[i][k]
+		//Lch[i][k] <- lij
 		if k == i || lij == 0 {
 			uij = 0
 		} else {
@@ -46,14 +52,18 @@ func Uset(A *mat.Dense, L *mat.Dense, U *mat.Dense, Lch *[MaxN][MaxN]chan float6
 	Uch[i][j] <- uij
 }
 
-func Lset(A *mat.Dense, L *mat.Dense, U *mat.Dense, Lch *[MaxN][MaxN]chan float64, Uch *[MaxN][MaxN]chan float64, i int, j int) {
+func Lset(A *mat.Dense, L *mat.Dense, U *mat.Dense, Lch *[size][size]chan float64, Uch *[size][size]chan float64, i int, j int) {
 	defer wg.Done()
 	if i != j {
 		r, _ := A.Dims()
 		var aji, uji, lji float64
 		for k := 0; k < r; k++ {
-			uji = <-Uch[k][i]
-			Uch[k][i] <- uji
+			if k == i {
+				uji = 0
+			} else {
+				uji = <-Uch[k][i]
+				Uch[k][i] <- uji
+			}
 			if k == i || uji == 0 {
 				lji = 0
 			} else {
@@ -82,7 +92,7 @@ func Lset(A *mat.Dense, L *mat.Dense, U *mat.Dense, Lch *[MaxN][MaxN]chan float6
 	}
 }
 
-func LUgo(A *mat.Dense, L *mat.Dense, U *mat.Dense, Lch *[MaxN][MaxN]chan float64, Uch *[MaxN][MaxN]chan float64) {
+func LUgo(A *mat.Dense, L *mat.Dense, U *mat.Dense, Lch *[size][size]chan float64, Uch *[size][size]chan float64) {
 	r, _ := A.Dims()
 	var J int
 	for i := 0; i < r; i++ {
@@ -114,10 +124,10 @@ func LU(A *mat.Dense, L *mat.Dense, U *mat.Dense) {
 				for k := 0; k < r; k++ {
 					Aji += L.At(j, k) * U.At(k, i)
 				}
-				if U.At(i, i) == 0 {
+				if U.At(j, j) == 0 {
 					Lji = 0
 				} else {
-					Lji = (A.At(j, i) - Aji) / U.At(i, i)
+					Lji = (A.At(j, i) - Aji) / U.At(j, j)
 				}
 				L.Set(j, i, Lji)
 				Aji = 0
@@ -128,8 +138,7 @@ func LU(A *mat.Dense, L *mat.Dense, U *mat.Dense) {
 
 func main() {
 
-	n := 9
-
+	n := 300
 	var x []float64
 	for i := 0; i < n*n; i++ {
 		r := rand.Intn(100)
@@ -141,7 +150,7 @@ func main() {
 	//A := mat.NewDense(3, 3, x)
 	//x := []float64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}
 	//A := mat.NewDense(4, 4, x)
-	matPrint(A)
+	//matPrint(A)
 
 	L1 := mat.NewDense(n, n, nil)
 	U1 := mat.NewDense(n, n, nil)
@@ -150,8 +159,8 @@ func main() {
 	}
 
 	t1 := time.Now()
-	var Lch [MaxN][MaxN]chan float64
-	var Uch [MaxN][MaxN]chan float64
+	var Lch [size][size]chan float64
+	var Uch [size][size]chan float64
 	/*
 		var Lch [][]chan float64
 		var Uch [][]chan float64
@@ -182,13 +191,13 @@ func main() {
 	LUgo(A, L1, U1, &Lch, &Uch)
 	fmt.Println("LUgo:", time.Now().Sub(t1))
 
-	Ans := mat.NewDense(n, n, nil)
-	Ans.Product(L1, U1)
-	//matPrint(Ans)
-	Sub := mat.NewDense(n, n, nil)
-	Sub.Sub(Ans, A)
+	Ans1 := mat.NewDense(n, n, nil)
+	Ans1.Product(L1, U1)
+	//matPrint(Ans1)
+	Sub1 := mat.NewDense(n, n, nil)
+	Sub1.Sub(Ans1, A)
 	//matPrint(Sub)
-	fmt.Println(Sub.Norm(1))
+	fmt.Println(Sub1.Norm(1))
 	//matPrint(L1)
 	//matPrint(U1)
 
@@ -201,6 +210,14 @@ func main() {
 	t2 := time.Now()
 	LU(A, L2, U2)
 	fmt.Println("LU:", time.Now().Sub(t2))
+
+	Ans2 := mat.NewDense(n, n, nil)
+	Ans2.Product(L2, U2)
+	//matPrint(Ans2)
+	Sub2 := mat.NewDense(n, n, nil)
+	Sub2.Sub(Ans2, A)
+	//matPrint(Sub2)
+	fmt.Println(Sub2.Norm(1))
 	//matPrint(L2)
 	//matPrint(U2)
 	fmt.Println("")
