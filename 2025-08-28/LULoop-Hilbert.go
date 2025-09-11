@@ -9,7 +9,7 @@ import (
 
 var wg sync.WaitGroup
 
-const size = 8
+const size = 400
 
 func Uset(A *[size][size]big.Float, L *[size][size]big.Float, U *[size][size]big.Float,
 	Lch *[size][size]chan big.Float, Uch *[size][size]chan big.Float, i int, j int) {
@@ -130,7 +130,7 @@ func main() {
 			n.Add(&i2, &j2)
 			n.Add(&n, big.NewFloat(1))
 			a.SetPrec(1024).Quo(big.NewFloat(1), &n)
-			A[i][j].Set(&a)
+			A[i][j].SetPrec(1024).Set(&a)
 			if i == j {
 				L1[i][j].Set(big.NewFloat(1))
 				L2[i][j].Set(big.NewFloat(1))
@@ -142,6 +142,7 @@ func main() {
 			B[i].Set(big.NewFloat(0))
 		}
 	}
+
 	/*
 		for i := 0; i < size; i++ {
 			for j := 0; j < size; j++ {
@@ -203,10 +204,12 @@ func main() {
 		}
 	}
 
-	fmt.Println("LU:[x]")
-	for i := 0; i < size; i++ {
-		fmt.Println(i, " : ", &x1[i])
-	}
+	/*
+		fmt.Println("LU:[x]")
+		for i := 0; i < size; i++ {
+			fmt.Println(i, " : ", &x1[i])
+		}
+	*/
 
 	t2 := time.Now()
 	var Lch [size][size]chan big.Float
@@ -264,9 +267,11 @@ func main() {
 			sum.Set(big.NewFloat(0))
 		}
 	}
-	
-	fmt.Println("LUgo:[x]")
-	for i := 0; i < size; i++ {
-		fmt.Println(i, " : ", &x2[i])
-	}
+
+	/*
+		fmt.Println("LUgo:[x]")
+		for i := 0; i < size; i++ {
+			fmt.Println(i, " : ", &x2[i])
+		}
+	*/
 }

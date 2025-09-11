@@ -10,7 +10,7 @@ import (
 
 var wg sync.WaitGroup
 
-const size = 700
+const size = 400
 
 func Uset(A *[size][size]big.Float, L *[size][size]big.Float, U *[size][size]big.Float,
 	Lch *[size][size]chan big.Float, Uch *[size][size]chan big.Float, i int, j int) {
@@ -130,7 +130,7 @@ func main() {
 			y2 := rand.Float64()
 			y1.SetFloat64(y2)
 			a.SetPrec(1024).Mul(&x1, &y1)
-			A[i][j] = a
+			A[i][j].Set(&a)
 			if i == j {
 				L1[i][j].Set(big.NewFloat(1))
 				L2[i][j].Set(big.NewFloat(1))

@@ -120,6 +120,7 @@ func LU(A *[size][size]big.Float, L *[size][size]big.Float, U *[size][size]big.F
 func main() {
 	var A, L1, U1, L2, U2 [size][size]big.Float
 	var a, x1, y1 big.Float
+
 	for i := 0; i < size; i++ {
 		for j := 0; j < size; j++ {
 			x2 := rand.Float64()
@@ -134,6 +135,7 @@ func main() {
 			}
 		}
 	}
+
 
 	t1 := time.Now()
 	LU(&A, &L1, &U1)
@@ -151,7 +153,7 @@ func main() {
 			norm.Add(&norm, &sub)
 		}
 	}
-	norm.SetPrec(64).Sqrt(&norm)
+	norm.SetPrec(1024).Sqrt(&norm)
 	fmt.Println(&norm)
 	norm.Set(big.NewFloat(0))
 

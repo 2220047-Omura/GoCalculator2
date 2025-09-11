@@ -124,10 +124,10 @@ func LU(A *mat.Dense, L *mat.Dense, U *mat.Dense) {
 				for k := 0; k < r; k++ {
 					Aji += L.At(j, k) * U.At(k, i)
 				}
-				if U.At(j, j) == 0 {
+				if U.At(i, i) == 0 {
 					Lji = 0
 				} else {
-					Lji = (A.At(j, i) - Aji) / U.At(j, j)
+					Lji = (A.At(j, i) - Aji) / U.At(i, i)
 				}
 				L.Set(j, i, Lji)
 				Aji = 0
