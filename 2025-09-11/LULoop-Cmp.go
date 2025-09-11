@@ -10,7 +10,7 @@ import (
 
 var wg sync.WaitGroup
 
-const size = 8
+const size = 400
 
 func Hilbert(A *[size][size]big.Float) {
 	var a, n, i2, j2 big.Float
@@ -229,16 +229,20 @@ func PrintM(M *[size][size]big.Float) {
 	for i := 0; i < size; i++ {
 		print("\n")
 		for j := 0; j < size; j++ {
-			print(&M[i][j])
+			fmt.Print(&M[i][j], " ")
 		}
 	}
+	print("\n")
 }
 
 func main() {
 	var A, L1, U1, L2, U2 [size][size]big.Float
 
-	Hilbert(&A)
-	//Random(&A)
+	//Hilbert(&A)
+	Random(&A)
+	//SimpleA(&A)
+
+	//PrintM(&A)
 
 	for i := 0; i < size; i++ {
 		for j := 0; j < size; j++ {
@@ -253,8 +257,8 @@ func main() {
 	LU(&A, &L1, &U1)
 	fmt.Println("LU:", time.Now().Sub(t1))
 
-	CalcX(&L1, &U1)
-	//Norm(&A, &L1, &U1)
+	//CalcX(&L1, &U1)
+	Norm(&A, &L1, &U1)
 
 	t2 := time.Now()
 	var Lch [size][size]chan big.Float
@@ -280,6 +284,6 @@ func main() {
 	LUgo(&A, &L2, &U2, &Lch, &Uch)
 	fmt.Println("LUgo:", time.Now().Sub(t2))
 
-	CalcX(&L2, &U2)
-	//Norm(&A, &L2, &U2)
+	//CalcX(&L2, &U2)
+	Norm(&A, &L2, &U2)
 }
