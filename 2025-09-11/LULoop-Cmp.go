@@ -10,9 +10,39 @@ import (
 
 var wg sync.WaitGroup
 
-const size = 400
+const size = 500
+
+func SimpleA(A *[size][size]big.Float) {
+	//各要素が左上から1, 2, 3, ... と決められる行列を生成
+
+	var n big.Float
+	for i := 0; i < size; i++ {
+		for j := 0; j < size; j++ {
+			n.Add(&n, big.NewFloat(1))
+			A[i][j].SetPrec(1024).Set(&n)
+		}
+	}
+}
+
+func Random(A *[size][size]big.Float) {
+	//各要素が乱数で決められる行列を生成
+
+	var a, x1, y1 big.Float
+	for i := 0; i < size; i++ {
+		for j := 0; j < size; j++ {
+			x2 := rand.Float64()
+			x1.SetFloat64(x2)
+			y2 := rand.Float64()
+			y1.SetFloat64(y2)
+			a.SetPrec(1024).Mul(&x1, &y1)
+			A[i][j].SetPrec(1024).Set(&a)
+		}
+	}
+}
 
 func Hilbert(A *[size][size]big.Float) {
+	//ヒルベルト行列を生成
+
 	var a, n, i2, j2 big.Float
 	for i := 0; i < size; i++ {
 		for j := 0; j < size; j++ {
@@ -28,28 +58,53 @@ func Hilbert(A *[size][size]big.Float) {
 	}
 }
 
-func Random(A *[size][size]big.Float) {
-	var a, x1, y1 big.Float
+func LU(A *[size][size]big.Float, L *[size][size]big.Float, U *[size][size]big.Float) {
+	var Aij, Uij, Aji, Lji, c big.Float
+	var J int
 	for i := 0; i < size; i++ {
-		for j := 0; j < size; j++ {
-			x2 := rand.Float64()
-			x1.SetFloat64(x2)
-			y2 := rand.Float64()
-			y1.SetFloat64(y2)
-			a.SetPrec(1024).Mul(&x1, &y1)
-			A[i][j].SetPrec(1024).Set(&a)
+		for j := J; j < size; j++ {
+			for k := 0; k < size; k++ {
+				c.Mul(&L[i][k], &U[k][j])
+				Aij.Add(&Aij, &c)
+			}
+			Uij.Sub(&A[i][j], &Aij)
+			U[i][j].Set(&Uij)
+			Aij = *big.NewFloat(0)
+			//Aij.Set(big.NewFloat(0))
+
+			if i != j {
+				if big.NewFloat(0).Cmp(&U[i][i]) == 0 {
+					Lji = *big.NewFloat(0)
+					//Lji.Set(big.NewFloat(0))
+				} else {
+					for k := 0; k < size; k++ {
+						c.Mul(&L[j][k], &U[k][i])
+						Aji.Add(&Aji, &c)
+					}
+					c.Sub(&A[j][i], &Aji)
+					Lji.Quo(&c, &U[i][i])
+				}
+				L[j][i].Set(&Lji)
+				Aji = *big.NewFloat(0)
+				//Aji.Set(big.NewFloat(0))
+			}
 		}
+		J += 1
 	}
 }
 
-func SimpleA(A *[size][size]big.Float) {
-	var n big.Float
+func LUgo(A *[size][size]big.Float, L *[size][size]big.Float, U *[size][size]big.Float,
+	Lch *[size][size]chan big.Float, Uch *[size][size]chan big.Float) {
+	var J int
 	for i := 0; i < size; i++ {
-		for j := 0; j < size; j++ {
-			n.Add(&n, big.NewFloat(1))
-			A[i][j].SetPrec(1024).Set(&n)
+		for j := J; j < size; j++ {
+			wg.Add(2)
+			go Uset(A, L, U, Lch, Uch, i, j)
+			go Lset(A, L, U, Lch, Uch, i, j)
 		}
+		J += 1
 	}
+	wg.Wait()
 }
 
 func Uset(A *[size][size]big.Float, L *[size][size]big.Float, U *[size][size]big.Float,
@@ -112,56 +167,9 @@ func Lset(A *[size][size]big.Float, L *[size][size]big.Float, U *[size][size]big
 	}
 }
 
-func LUgo(A *[size][size]big.Float, L *[size][size]big.Float, U *[size][size]big.Float,
-	Lch *[size][size]chan big.Float, Uch *[size][size]chan big.Float) {
-	var J int
-	for i := 0; i < size; i++ {
-		for j := J; j < size; j++ {
-			wg.Add(2)
-			go Uset(A, L, U, Lch, Uch, i, j)
-			go Lset(A, L, U, Lch, Uch, i, j)
-		}
-		J += 1
-	}
-	wg.Wait()
-}
-
-func LU(A *[size][size]big.Float, L *[size][size]big.Float, U *[size][size]big.Float) {
-	var Aij, Uij, Aji, Lji, c big.Float
-	var J int
-	for i := 0; i < size; i++ {
-		for j := J; j < size; j++ {
-			for k := 0; k < size; k++ {
-				c.Mul(&L[i][k], &U[k][j])
-				Aij.Add(&Aij, &c)
-			}
-			Uij.Sub(&A[i][j], &Aij)
-			U[i][j].Set(&Uij)
-			Aij = *big.NewFloat(0)
-			//Aij.Set(big.NewFloat(0))
-
-			if i != j {
-				if big.NewFloat(0).Cmp(&U[i][i]) == 0 {
-					Lji = *big.NewFloat(0)
-					//Lji.Set(big.NewFloat(0))
-				} else {
-					for k := 0; k < size; k++ {
-						c.Mul(&L[j][k], &U[k][i])
-						Aji.Add(&Aji, &c)
-					}
-					c.Sub(&A[j][i], &Aji)
-					Lji.Quo(&c, &U[i][i])
-				}
-				L[j][i].Set(&Lji)
-				Aji = *big.NewFloat(0)
-				//Aji.Set(big.NewFloat(0))
-			}
-		}
-		J += 1
-	}
-}
-
 func CalcX(L *[size][size]big.Float, U *[size][size]big.Float) {
+	//Ax=b (b={(1),(0),(0)...}) におけるxを、LU分解後の行列L, Uから計算
+
 	fmt.Println("x")
 
 	var B [size]big.Float
@@ -205,6 +213,8 @@ func CalcX(L *[size][size]big.Float, U *[size][size]big.Float) {
 }
 
 func Norm(A *[size][size]big.Float, L *[size][size]big.Float, U *[size][size]big.Float) {
+	//行列L, Uの積を行列Aから引き、その差のノルムを計算
+
 	fmt.Println("Norm")
 	var b, c, sub, norm big.Float
 	for i := 0; i < size; i++ {
@@ -226,6 +236,8 @@ func Norm(A *[size][size]big.Float, L *[size][size]big.Float, U *[size][size]big
 }
 
 func PrintM(M *[size][size]big.Float) {
+	//行列をプリント
+
 	for i := 0; i < size; i++ {
 		print("\n")
 		for j := 0; j < size; j++ {
@@ -238,9 +250,9 @@ func PrintM(M *[size][size]big.Float) {
 func main() {
 	var A, L1, U1, L2, U2 [size][size]big.Float
 
-	//Hilbert(&A)
-	Random(&A)
 	//SimpleA(&A)
+	//Random(&A)
+	Hilbert(&A)
 
 	//PrintM(&A)
 
@@ -259,6 +271,9 @@ func main() {
 
 	//CalcX(&L1, &U1)
 	Norm(&A, &L1, &U1)
+
+	//PrintM(&L1)
+	//PrintM(&U1)
 
 	t2 := time.Now()
 	var Lch [size][size]chan big.Float
@@ -286,4 +301,7 @@ func main() {
 
 	//CalcX(&L2, &U2)
 	Norm(&A, &L2, &U2)
+
+	//PrintM(&L2)
+	//PrintM(&U2)
 }
