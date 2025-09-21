@@ -191,10 +191,8 @@ func CalcX(L *[size][size]big.Float, U *[size][size]big.Float) {
 	var B [size]big.Float
 	for i := 0; i < size; i++ {
 		if i == 0 {
-			//B[i].Set(big.NewFloat(1))
 			B[i].SetString("1")
 		} else {
-			//B[i].Set(big.NewFloat(0))
 			B[i].SetString("0")
 		}
 	}
@@ -243,12 +241,12 @@ func Norm(A *[size][size]big.Float, L *[size][size]big.Float, U *[size][size]big
 			sub.SetPrec(1024).Sub(&A[i][j], &c)
 			sub.Mul(&sub, &sub)
 			norm.Add(&norm, &sub)
-			c.Set(big.NewFloat(0))
+			c.SetString("0")
 		}
 	}
 	norm.SetPrec(1024).Sqrt(&norm)
 	fmt.Println(&norm)
-	norm.Set(big.NewFloat(0))
+	norm.SetString("0")
 }
 
 func PrintM(M *[size][size]big.Float) {
