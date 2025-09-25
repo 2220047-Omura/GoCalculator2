@@ -10,7 +10,7 @@ import (
 
 var wg sync.WaitGroup
 
-const size = 400
+const size = 100
 
 func SimpleA(A *[size][size]big.Float) {
 	//各要素が左上から1, 2, 3, ... と決められる行列を生成
@@ -368,7 +368,7 @@ func PrintM(M *[size][size]big.Float) {
 }
 
 func main() {
-	var A, L1, U1, L2, U2 [size][size]big.Float
+	var A, L_NF, U_NF, L_Str, U_Str, Lgo_NF, Ugo_NF, Lgo_Str, Ugo_Str [size][size]big.Float
 
 	//行列Aの作り方を指定
 	//SimpleA(&A)
@@ -379,13 +379,19 @@ func main() {
 
 	for i := 0; i < size; i++ {
 		for j := 0; j < size; j++ {
-			L1[i][j].SetPrec(1024)
-			L2[i][j].SetPrec(1024)
-			U1[i][j].SetPrec(1024)
-			U2[i][j].SetPrec(1024)
+			L_NF[i][j].SetPrec(1024)
+			L_Str[i][j].SetPrec(1024)
+			Lgo_NF[i][j].SetPrec(1024)
+			Lgo_Str[i][j].SetPrec(1024)
+			U_NF[i][j].SetPrec(1024)
+			U_Str[i][j].SetPrec(1024)
+			Ugo_NF[i][j].SetPrec(1024)
+			Ugo_Str[i][j].SetPrec(1024)
 			if i == j {
-				L1[i][j].SetString("1")
-				L2[i][j].SetString("1")
+				L_NF[i][j].SetString("1")
+				L_Str[i][j].SetString("1")
+				Lgo_NF[i][j].SetString("1")
+				Lgo_Str[i][j].SetString("1")
 			}
 		}
 	}
@@ -393,11 +399,11 @@ func main() {
 	var t time.Time
 
 	t = time.Now()
-	LU_NF(&A, &L1, &U1)
+	LU_NF(&A, &L_NF, &U_NF)
 	fmt.Println("LU_NF:", time.Now().Sub(t))
 
 	t = time.Now()
-	LU_Str(&A, &L1, &U1)
+	LU_Str(&A, &L_Str, &U_Str)
 	fmt.Println("LU_Str:", time.Now().Sub(t))
 
 	//L1, U1の結果の表示方法を指定
@@ -433,7 +439,7 @@ func main() {
 		}
 	}
 
-	LUgo_NF(&A, &L2, &U2, &Lch_NF, &Uch_NF)
+	LUgo_NF(&A, &Lgo_NF, &Ugo_NF, &Lch_NF, &Uch_NF)
 	fmt.Println("LUgo_NF:", time.Now().Sub(t))
 
 	t = time.Now()
@@ -462,7 +468,7 @@ func main() {
 		}
 	}
 
-	LUgo_Str(&A, &L2, &U2, &Lch_Str, &Uch_Str)
+	LUgo_Str(&A, &Lgo_Str, &Ugo_Str, &Lch_Str, &Uch_Str)
 	fmt.Println("LUgo_Str:", time.Now().Sub(t))
 
 	//L2, U2の結果の表示方法を指定
