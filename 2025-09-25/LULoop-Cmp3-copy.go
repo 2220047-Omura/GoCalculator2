@@ -22,6 +22,16 @@ func SimpleA(A *[size][size]big.Float) {
 			A[i][j].SetPrec(1024).Set(&n)
 		}
 	}
+
+	/*
+		np := new(big.Float).SetPrec(1024)
+		for i := 0; i < size; i++ {
+			for j := 0; j < size; j++ {
+				np.Add(np, big.NewFloat(1))
+				A[i][j].SetPrec(1024).Set(np)
+			}
+		}
+	*/
 }
 
 func Random(A *[size][size]big.Float) {
@@ -44,13 +54,16 @@ func Hilbert(A *[size][size]big.Float) {
 	//ヒルベルト行列を生成
 
 	var a, n, i2, j2 big.Float
+	one := big.NewFloat(1)
 	for i := 0; i < size; i++ {
 		for j := 0; j < size; j++ {
 			i2.SetInt64(int64(i))
 			j2.SetInt64(int64(j))
 			n.Add(&i2, &j2)
-			n.Add(&n, big.NewFloat(1))
-			a.SetPrec(1024).Quo(big.NewFloat(1), &n)
+			// n.Add(&n, big.NewFloat(1))
+			n.Add(&n, one)
+			// a.SetPrec(1024).Quo(big.NewFloat(1), &n)
+			a.SetPrec(1024).Quo(one, &n)
 			A[i][j].SetPrec(1024).Set(&a)
 		}
 
@@ -60,6 +73,7 @@ func Hilbert(A *[size][size]big.Float) {
 func LU_NF(A *[size][size]big.Float, L *[size][size]big.Float, U *[size][size]big.Float) {
 	var Aij, Uij, Aji, Lji, c big.Float
 	var J int
+	zero := *big.NewFloat(0)
 	for i := 0; i < size; i++ {
 		for j := J; j < size; j++ {
 			for k := 0; k < size; k++ {
@@ -68,11 +82,14 @@ func LU_NF(A *[size][size]big.Float, L *[size][size]big.Float, U *[size][size]bi
 			}
 			Uij.Sub(&A[i][j], &Aij)
 			U[i][j].Set(&Uij)
-			Aij = *big.NewFloat(0)
+			// Aij = *big.NewFloat(0)
+			Aij = zero
 
 			if i != j {
-				if big.NewFloat(0).Cmp(&U[i][i]) == 0 {
-					Lji = *big.NewFloat(0)
+				// if big.NewFloat(0).Cmp(&U[i][i]) == 0 {
+				if zero.Cmp(&U[i][i]) == 0 {
+					// Lji = *big.NewFloat(0)
+					Lji = zero
 				} else {
 					for k := 0; k < size; k++ {
 						c.Mul(&L[j][k], &U[k][i])
@@ -82,7 +99,8 @@ func LU_NF(A *[size][size]big.Float, L *[size][size]big.Float, U *[size][size]bi
 					Lji.Quo(&c, &U[i][i])
 				}
 				L[j][i].Set(&Lji)
-				Aji = *big.NewFloat(0)
+				// Aji = *big.NewFloat(0)
+				Aji = zero
 			}
 		}
 		J += 1
@@ -92,6 +110,8 @@ func LU_NF(A *[size][size]big.Float, L *[size][size]big.Float, U *[size][size]bi
 func LU_Str(A *[size][size]big.Float, L *[size][size]big.Float, U *[size][size]big.Float) {
 	var Aij, Uij, Aji, Lji, c big.Float
 	var J int
+	var zero big.Float
+	zero.SetString("0")
 	for i := 0; i < size; i++ {
 		for j := J; j < size; j++ {
 			for k := 0; k < size; k++ {
@@ -100,11 +120,14 @@ func LU_Str(A *[size][size]big.Float, L *[size][size]big.Float, U *[size][size]b
 			}
 			Uij.Sub(&A[i][j], &Aij)
 			U[i][j].Set(&Uij)
-			Aij.SetString("0")
+			// Aij.SetString("0")
+			Aij = zero
 
 			if i != j {
-				if big.NewFloat(0).Cmp(&U[i][i]) == 0 {
-					Lji.SetString("0")
+				// if big.NewFloat(0).Cmp(&U[i][i]) == 0 {
+				if zero.Cmp(&U[i][i]) == 0 {
+					// Lji.SetString("0")
+					Lji = zero
 				} else {
 					for k := 0; k < size; k++ {
 						c.Mul(&L[j][k], &U[k][i])
@@ -114,7 +137,8 @@ func LU_Str(A *[size][size]big.Float, L *[size][size]big.Float, U *[size][size]b
 					Lji.Quo(&c, &U[i][i])
 				}
 				L[j][i].Set(&Lji)
-				Aji.SetString("0")
+				// Aji.SetString("0")
+				Aji = zero
 			}
 		}
 		J += 1
@@ -137,6 +161,7 @@ func Uset_NF(A *[size][size]big.Float, L *[size][size]big.Float, U *[size][size]
 	Lch *[size][size]chan big.Float, Uch *[size][size]chan big.Float, i int, j int) {
 	defer wg.Done()
 	var aij, uij, lij, c big.Float
+	zero := *big.NewFloat(0)
 	aij.SetPrec(1024)
 	uij.SetPrec(1024)
 	lij.SetPrec(1024)
@@ -144,13 +169,16 @@ func Uset_NF(A *[size][size]big.Float, L *[size][size]big.Float, U *[size][size]
 
 	for k := 0; k < size; k++ {
 		if k == i {
-			lij = *big.NewFloat(0)
+			// lij = *big.NewFloat(0)
+			lij = zero
 		} else {
 			lij = <-Lch[i][k]
 			Lch[i][k] <- lij
 		}
-		if lij.Cmp(big.NewFloat(0)) == 0 {
-			uij = *big.NewFloat(0)
+		// if lij.Cmp(big.NewFloat(0)) == 0 {
+		if lij.Cmp(&zero) == 0 {
+			// uij = *big.NewFloat(0)
+			uij = zero
 		} else {
 			uij = <-Uch[k][j]
 			Uch[k][j] <- uij
@@ -169,6 +197,7 @@ func Lset_NF(A *[size][size]big.Float, L *[size][size]big.Float, U *[size][size]
 	defer wg.Done()
 	if i != j {
 		var uii, aji, uji, lji, lji2, c big.Float
+		zero := *big.NewFloat(0)
 		aji.SetPrec(1024)
 		uji.SetPrec(1024)
 		lji.SetPrec(1024)
@@ -177,18 +206,23 @@ func Lset_NF(A *[size][size]big.Float, L *[size][size]big.Float, U *[size][size]
 
 		uii = <-Uch[i][i]
 		Uch[i][i] <- uii
-		if big.NewFloat(0).Cmp(&uii) == 0 {
-			lji = *big.NewFloat(0)
+		// if big.NewFloat(0).Cmp(&uii) == 0 {
+		if zero.Cmp(&uii) == 0 {
+			// lji = *big.NewFloat(0)
+			lji = zero
 		} else {
 			for k := 0; k < size; k++ {
 				if k == i {
-					uji = *big.NewFloat(0)
+					// uji = *big.NewFloat(0)
+					uji = zero
 				} else {
 					uji = <-Uch[k][i]
 					Uch[k][i] <- uji
 				}
-				if k == i || big.NewFloat(0).Cmp(&uji) == 0 {
-					lji = *big.NewFloat(0)
+				// if k == i || big.NewFloat(0).Cmp(&uji) == 0 {
+				if k == i || zero.Cmp(&uji) == 0 {
+					// lji = *big.NewFloat(0)
+					lji = zero
 				} else {
 					lji = <-Lch[j][k]
 					Lch[j][k] <- lji
@@ -221,6 +255,8 @@ func Uset_Str(A *[size][size]big.Float, L *[size][size]big.Float, U *[size][size
 	Lch *[size][size]chan big.Float, Uch *[size][size]chan big.Float, i int, j int) {
 	defer wg.Done()
 	var aij, uij, lij, c big.Float
+	var zero big.Float
+	zero.SetString("0")
 	aij.SetPrec(1024)
 	uij.SetPrec(1024)
 	lij.SetPrec(1024)
@@ -228,13 +264,15 @@ func Uset_Str(A *[size][size]big.Float, L *[size][size]big.Float, U *[size][size
 
 	for k := 0; k < size; k++ {
 		if k == i {
-			lij.SetString("0")
+			// lij.SetString("0")
+			lij = zero
 		} else {
 			lij = <-Lch[i][k]
 			Lch[i][k] <- lij
 		}
 		if lij.Cmp(big.NewFloat(0)) == 0 {
-			uij.SetString("0")
+			// uij.SetString("0")
+			uij = zero
 		} else {
 			uij = <-Uch[k][j]
 			Uch[k][j] <- uij
@@ -253,6 +291,8 @@ func Lset_Str(A *[size][size]big.Float, L *[size][size]big.Float, U *[size][size
 	defer wg.Done()
 	if i != j {
 		var uii, aji, uji, lji, lji2, c big.Float
+		var zero big.Float
+		zero.SetString("0")
 		aji.SetPrec(1024)
 		uji.SetPrec(1024)
 		lji.SetPrec(1024)
@@ -262,17 +302,20 @@ func Lset_Str(A *[size][size]big.Float, L *[size][size]big.Float, U *[size][size
 		uii = <-Uch[i][i]
 		Uch[i][i] <- uii
 		if big.NewFloat(0).Cmp(&uii) == 0 {
-			lji.SetString("0")
+			// lji.SetString("0")
+			lji = zero
 		} else {
 			for k := 0; k < size; k++ {
 				if k == i {
-					uji.SetString("0")
+					// uji.SetString("0")
+					uji = zero
 				} else {
 					uji = <-Uch[k][i]
 					Uch[k][i] <- uji
 				}
 				if k == i || big.NewFloat(0).Cmp(&uji) == 0 {
-					lji.SetString("0")
+					// lji.SetString("0")
+					lji = zero
 				} else {
 					lji = <-Lch[j][k]
 					Lch[j][k] <- lji
@@ -372,7 +415,7 @@ func main() {
 
 	//行列Aの作り方を指定
 	//SimpleA(&A)
-	//Random(&A)
+	// Random(&A)
 	Hilbert(&A)
 
 	//PrintM(&A)
@@ -401,14 +444,16 @@ func main() {
 	t = time.Now()
 	LU_NF(&A, &L_NF, &U_NF)
 	fmt.Println("LU_NF:", time.Now().Sub(t))
+	Norm(&A, &L_NF, &U_NF)
 
 	t = time.Now()
 	LU_Str(&A, &L_Str, &U_Str)
 	fmt.Println("LU_Str:", time.Now().Sub(t))
+	Norm(&A, &L_Str, &U_Str)
 
 	//L1, U1の結果の表示方法を指定
-	//CalcX(&L1, &U1)
-	//Norm(&A, &L1, &U1)
+	// CalcX(&L1, &U1)
+	// Norm(&A, &L1, &U1)
 
 	//PrintM(&L1)
 	//PrintM(&U1)
@@ -441,6 +486,7 @@ func main() {
 
 	LUgo_NF(&A, &Lgo_NF, &Ugo_NF, &Lch_NF, &Uch_NF)
 	fmt.Println("LUgo_NF:", time.Now().Sub(t))
+	Norm(&A, &Lgo_NF, &Ugo_NF)
 
 	t = time.Now()
 	var Lch_Str [size][size]chan big.Float
@@ -470,6 +516,7 @@ func main() {
 
 	LUgo_Str(&A, &Lgo_Str, &Ugo_Str, &Lch_Str, &Uch_Str)
 	fmt.Println("LUgo_Str:", time.Now().Sub(t))
+	Norm(&A, &Lgo_Str, &Ugo_Str)
 
 	//L2, U2の結果の表示方法を指定
 	//CalcX(&L2, &U2)

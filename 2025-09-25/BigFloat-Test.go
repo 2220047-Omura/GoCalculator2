@@ -81,9 +81,11 @@ func main() {
 
 	d.SetPrec(1024)
 	fmt.Println(d)
-	//d = *big.NewFloat(1)
+	//d = *big.NewFloat(0)
 	d.SetString("0")
 	fmt.Println(d)
 	d.SetPrec(1024).SetFloat64(3.14)
 	fmt.Println(d)
+	d.SetString("0")
+	fmt.Println(d) //expの変更が3.14からなされていないことが分かる。
 }

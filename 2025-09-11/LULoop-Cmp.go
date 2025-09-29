@@ -10,7 +10,7 @@ import (
 
 var wg sync.WaitGroup
 
-const size = 500
+const size = 600
 
 func SimpleA(A *[size][size]big.Float) {
 	//各要素が左上から1, 2, 3, ... と決められる行列を生成
@@ -250,6 +250,7 @@ func PrintM(M *[size][size]big.Float) {
 func main() {
 	var A, L1, U1, L2, U2 [size][size]big.Float
 
+	//行列Aの作り方を指定
 	//SimpleA(&A)
 	//Random(&A)
 	Hilbert(&A)
@@ -269,6 +270,7 @@ func main() {
 	LU(&A, &L1, &U1)
 	fmt.Println("LU:", time.Now().Sub(t1))
 
+	//L1, U1の結果の表示方法を指定
 	//CalcX(&L1, &U1)
 	Norm(&A, &L1, &U1)
 
@@ -299,6 +301,7 @@ func main() {
 	LUgo(&A, &L2, &U2, &Lch, &Uch)
 	fmt.Println("LUgo:", time.Now().Sub(t2))
 
+	//L2, U2の結果の表示方法を指定
 	//CalcX(&L2, &U2)
 	Norm(&A, &L2, &U2)
 

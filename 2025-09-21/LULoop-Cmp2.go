@@ -223,7 +223,7 @@ func CalcX(L *[size][size]big.Float, U *[size][size]big.Float) {
 	}
 
 	for i := 0; i < size; i++ {
-		fmt.Println(i, " : ", &x1[i])
+		//fmt.Println(i, " : ", &x1[i])
 	}
 }
 
