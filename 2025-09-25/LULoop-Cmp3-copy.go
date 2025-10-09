@@ -10,7 +10,7 @@ import (
 
 var wg sync.WaitGroup
 
-const size = 500
+const size = 5
 
 func SimpleA(A *[size][size]big.Float) {
 	//各要素が左上から1, 2, 3, ... と決められる行列を生成
@@ -404,7 +404,8 @@ func PrintM(M *[size][size]big.Float) {
 	for i := 0; i < size; i++ {
 		print("\n")
 		for j := 0; j < size; j++ {
-			fmt.Print(&M[i][j], " ")
+			fmt.Printf("%8.5f %s", &M[i][j], " ")
+			//fmt.Print(&M[i][j], " ")
 		}
 	}
 	print("\n")
@@ -414,11 +415,11 @@ func main() {
 	var A, L_NF, U_NF, L_Str, U_Str, Lgo_NF, Ugo_NF, Lgo_Str, Ugo_Str [size][size]big.Float
 
 	//行列Aの作り方を指定
-	//SimpleA(&A)
+	SimpleA(&A)
 	// Random(&A)
-	Hilbert(&A)
+	//Hilbert(&A)
 
-	//PrintM(&A)
+	PrintM(&A)
 
 	for i := 0; i < size; i++ {
 		for j := 0; j < size; j++ {
@@ -445,11 +446,15 @@ func main() {
 	LU_NF(&A, &L_NF, &U_NF)
 	fmt.Println("LU_NF:", time.Now().Sub(t))
 	Norm(&A, &L_NF, &U_NF)
+	PrintM(&L_NF)
+	PrintM(&U_NF)
 
 	t = time.Now()
 	LU_Str(&A, &L_Str, &U_Str)
 	fmt.Println("LU_Str:", time.Now().Sub(t))
 	Norm(&A, &L_Str, &U_Str)
+	PrintM(&L_Str)
+	PrintM(&U_Str)
 
 	//L1, U1の結果の表示方法を指定
 	// CalcX(&L1, &U1)
