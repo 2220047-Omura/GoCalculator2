@@ -229,8 +229,9 @@ func main() {
 			}
 		}
 	}
-	fmt.Println("逐次：", time.Now().Sub(t))
+	t2 := time.Now().Sub(t)
 	C.comp()
+	fmt.Println("逐次：", t2, "\n")
 
 	fmt.Println("-----並列-----")
 	C.init()
@@ -252,6 +253,7 @@ func main() {
 		}
 		wg.Wait()
 	}
-	fmt.Println("並列：", time.Now().Sub(t))
+	t2 = time.Now().Sub(t)
 	C.comp()
+	fmt.Println("並列：", t2, "\n")
 }

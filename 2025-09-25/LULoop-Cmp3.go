@@ -410,8 +410,8 @@ func main() {
 	//CalcX(&L1, &U1)
 	//Norm(&A, &L1, &U1)
 
-	//PrintM(&L1)
-	//PrintM(&U1)
+	//PrintM(&L_NF)
+	//PrintM(&U_NF)
 
 	t = time.Now()
 	var Lch_NF [size][size]chan big.Float
