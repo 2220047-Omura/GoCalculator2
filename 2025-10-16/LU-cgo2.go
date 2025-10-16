@@ -18,6 +18,7 @@ package main
 //
 // mpfi_t hilbert[N][N];
 // mpfi_t b[N];
+// mpfi_t calc[N][N];
 // mpfi_t tmp1;
 // mpfi_t tmp2;
 // //mpfi_t tmp;
@@ -35,6 +36,7 @@ package main
 //         mpfi_init2(b[i], acc);
 //         for (int j = 0; j < N; j++) {
 //             mpfi_init2(hilbert[i][j], acc);
+//	           mpfi_init2(calc[i][j], acc);
 //         }
 //     }
 //     //mpfi_init2(tmp, acc);
@@ -48,15 +50,18 @@ package main
 //     }
 //     for (int i = 0; i < N; i++) {
 //         for (int j = 0; j < N; j++) {
+//
 //	           double r = ((double)rand())/RAND_MAX;
 //	           mpfr_set_d(a, r, MPFR_RNDN);
 //	           mpfi_interv_fr(hilbert[i][j], a, a);
-// /*
+//
+///*
 //             mpfi_set_str(tmp1, "1", 10);
 //             sprintf(buf, "%d", (i+1)+(j+1)-1);
 //             mpfi_set_str(tmp2, buf, 10);
 //             mpfi_div(hilbert[i][j], tmp1, tmp2);
-// */
+//*/
+//
 //         }
 //     }
 //
@@ -79,19 +84,17 @@ package main
 // }
 //
 //
-// int LUfact1(int k, int i){
+// void LUfact1(int k, int i){
 //     // lu factorization
 //     mpfi_div(hilbert[i][k], hilbert[i][k], hilbert[k][k]);
-//	   return 1;
 // }
 //
-// int LUfact2(int k, int i, int j){
-// 	   mpfi_t tmp;
-//     mpfi_init2(tmp, acc);
+// void LUfact2(int k, int i, int j){
+// 	   //mpfi_t tmp;
+//     //mpfi_init2(tmp, acc);
 //     // lu factorization
-//     mpfi_mul(tmp, hilbert[i][k], hilbert[k][j]);
-//     mpfi_sub(hilbert[i][j], hilbert[i][j], tmp);
-//	   return 1;
+//     mpfi_mul(calc[i][j], hilbert[i][k], hilbert[k][j]);
+//     mpfi_sub(hilbert[i][j], hilbert[i][j], calc[i][j]);
 //}
 //
 // void comp(void) {
@@ -196,25 +199,44 @@ import (
 var wg sync.WaitGroup
 
 func call1(k int, i int) {
-	c := make(chan int, 1)
-	c <- int(C.LUfact1(C.int(k), C.int(i)))
+	/*
+		c := make(chan int, 1)
+		c <- int(C.LUfact1(C.int(k), C.int(i)))
+	*/
+	C.LUfact1(C.int(k), C.int(i))
 }
 
 func call2(k int, i int, j int) {
-	c := make(chan int, 1)
-	c <- int(C.LUfact2(C.int(k), C.int(i), C.int(j)))
+	/*
+		c := make(chan int, 1)
+		c <- int(C.LUfact2(C.int(k), C.int(i), C.int(j)))
+	*/
+	C.LUfact2(C.int(k), C.int(i), C.int(j))
 }
 
-func call1WG(k int, i int) {
+func call1WG(k int, i int, N int) {
 	defer wg.Done()
-	c := make(chan int, 1)
-	c <- int(C.LUfact1(C.int(k), C.int(i)))
+	var wg2 sync.WaitGroup
+	/*
+		c := make(chan int, 1)
+		c <- int(C.LUfact1(C.int(k), C.int(i)))
+	*/
+	C.LUfact1(C.int(k), C.int(i))
+	for j := k + 1; j < N; j++ {
+		//fmt.Println(k, i, j)
+		wg2.Add(1)
+		go call2WG(k, i, j, &wg2)
+	}
+	wg2.Wait()
 }
 
-func call2WG(k int, i int, j int) {
-	defer wg.Done()
-	c := make(chan int, 1)
-	c <- int(C.LUfact2(C.int(k), C.int(i), C.int(j)))
+func call2WG(k int, i int, j int, wg2 *sync.WaitGroup) {
+	defer wg2.Done()
+	/*
+		c := make(chan int, 1)
+		c <- int(C.LUfact2(C.int(k), C.int(i), C.int(j)))
+	*/
+	C.LUfact2(C.int(k), C.int(i), C.int(j))
 }
 
 func main() {
@@ -239,7 +261,7 @@ func main() {
 		}
 	}
 	t2 := time.Now().Sub(t)
-	C.comp()
+	//C.comp()
 	fmt.Println("逐次：", t2, "\n")
 
 	//fmt.Println("-----並列-----")
@@ -250,19 +272,21 @@ func main() {
 		for i := k + 1; i < N; i++ {
 			//fmt.Println(k, i)
 			wg.Add(1)
-			go call1WG(k, i)
+			go call1WG(k, i, N)
 		}
 		wg.Wait()
-		for i := k + 1; i < N; i++ {
-			for j := k + 1; j < N; j++ {
-				//fmt.Println(k, i, j)
-				wg.Add(1)
-				go call2WG(k, i, j)
-			}
-		}
-		wg.Wait()
+		/*
+				for i := k + 1; i < N; i++ {
+					for j := k + 1; j < N; j++ {
+						//fmt.Println(k, i, j)
+						wg.Add(1)
+						go call2WG(k, i, j)
+					}
+				}
+			wg.Wait()
+		*/
 	}
 	t2 = time.Now().Sub(t)
-	C.comp()
+	//C.comp()
 	fmt.Println("並列：", t2, "\n")
 }

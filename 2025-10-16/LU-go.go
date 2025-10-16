@@ -4,16 +4,14 @@ package main
 // #cgo LDFLAGS: -L/opt/homebrew/lib -lmpfi -lmpfr -lgmp
 //
 // #include <stdio.h>
-// #include <stdlib.h>
-// //#include <time.h>
 // #include <mpfi.h>
 // #include <mpfi_io.h>
 //
 // void printInterval(__mpfi_struct *b);
 // void comp(void);
 //
-// #define N 300
-// int acc = 1024;
+// #define N 8
+// int acc = 2000;
 // char buf[256];
 //
 // mpfi_t hilbert[N][N];
@@ -27,8 +25,6 @@ package main
 // }
 //
 // int init(void) {
-//	   mpfr_t a;
-// 	   mpfr_init2(a, acc);
 //
 //     // allocate
 //     for (int i = 0; i < N; i++) {
@@ -48,15 +44,10 @@ package main
 //     }
 //     for (int i = 0; i < N; i++) {
 //         for (int j = 0; j < N; j++) {
-//	           double r = ((double)rand())/RAND_MAX;
-//	           mpfr_set_d(a, r, MPFR_RNDN);
-//	           mpfi_interv_fr(hilbert[i][j], a, a);
-// /*
 //             mpfi_set_str(tmp1, "1", 10);
 //             sprintf(buf, "%d", (i+1)+(j+1)-1);
 //             mpfi_set_str(tmp2, buf, 10);
 //             mpfi_div(hilbert[i][j], tmp1, tmp2);
-// */
 //         }
 //     }
 //
@@ -186,75 +177,143 @@ package main
 //
 //
 //
-import "C"
+//import "C"
 import (
 	"fmt"
+	"math/big"
 	"sync"
 	"time"
 )
 
 var wg sync.WaitGroup
+var A [size][size]big.Float
+var B [size]big.Float
+
+const size = 8
+
+func initialize() {
+	var a, n, i2, j2 big.Float
+	one := big.NewFloat(1)
+	for i := 0; i < size; i++ {
+		for j := 0; j < size; j++ {
+			i2.SetInt64(int64(i))
+			j2.SetInt64(int64(j))
+			n.Add(&i2, &j2)
+			// n.Add(&n, big.NewFloat(1))
+			n.Add(&n, one)
+			// a.SetPrec(1024).Quo(big.NewFloat(1), &n)
+			a.SetPrec(1024).Quo(one, &n)
+			A[i][j].SetPrec(1024).Set(&a)
+		}
+	}
+
+	for i := 0; i < size; i++ {
+		if i == 0 {
+			B[i].SetPrec(1024).SetString("1")
+		} else {
+			B[i].SetPrec(1024).SetString("0")
+		}
+	}
+}
+
+func LUfact1(k int, i int) int {
+	A[i][k].SetPrec(1024).Mul(&A[i][k], &A[k][k])
+	return 1
+}
+
+func LUfact2(k int, i int, j int) int {
+	var tmp big.Float
+	tmp.SetPrec(1024).Mul(&A[i][k], &A[k][j])
+	A[i][j].SetPrec(1024).Sub(&A[i][j], &tmp)
+	return 1
+}
 
 func call1(k int, i int) {
 	c := make(chan int, 1)
-	c <- int(C.LUfact1(C.int(k), C.int(i)))
+	c <- int(LUfact1(k, i))
 }
 
 func call2(k int, i int, j int) {
 	c := make(chan int, 1)
-	c <- int(C.LUfact2(C.int(k), C.int(i), C.int(j)))
+	c <- int(LUfact2(k, i, j))
 }
 
 func call1WG(k int, i int) {
 	defer wg.Done()
 	c := make(chan int, 1)
-	c <- int(C.LUfact1(C.int(k), C.int(i)))
+	c <- int(LUfact1(k, i))
 }
 
 func call2WG(k int, i int, j int) {
 	defer wg.Done()
 	c := make(chan int, 1)
-	c <- int(C.LUfact2(C.int(k), C.int(i), C.int(j)))
+	c <- int(LUfact2(k, i, j))
+}
+
+func comp() {
+	var tmp big.Float
+	tmp.SetPrec(1024)
+
+	// forward substitution
+	for i := 1; i < size; i++ {
+		for j := 0; j <= i-1; j++ {
+			tmp.Mul(&B[j], &A[i][j])
+			B[i].Sub(&B[i], &tmp)
+		}
+	}
+
+	// backward substitution
+	for i := size - 1; i >= 0; i-- {
+		for j := size - 1; j > i; j-- {
+			tmp.Mul(&B[j], &A[i][j])
+			B[i].Sub(&B[i], &tmp)
+		}
+		B[i].Quo(&B[i], &A[i][i])
+	}
+
+	for i := 0; i < size; i++ {
+		fmt.Println(&B[i])
+	}
 }
 
 func main() {
 	var t time.Time
+	//var A [size][size]big.Float
+	//var B [size]big.Float
+	initialize()
 
-	N := int(C.def())
-	C.init()
-
-	//fmt.Println("-----逐次-----")
+	fmt.Println("-----逐次-----")
 
 	t = time.Now()
-	for k := 0; k < N; k++ {
-		for i := k + 1; i < N; i++ {
+	for k := 0; k < size; k++ {
+		for i := k + 1; i < size; i++ {
 			//fmt.Println(k, i)
 			call1(k, i)
 		}
-		for i := k + 1; i < N; i++ {
-			for j := k + 1; j < N; j++ {
+		for i := k + 1; i < size; i++ {
+			for j := k + 1; j < size; j++ {
 				//fmt.Println(k, i, j)
 				call2(k, i, j)
 			}
 		}
 	}
 	t2 := time.Now().Sub(t)
-	C.comp()
+	comp()
 	fmt.Println("逐次：", t2, "\n")
 
-	//fmt.Println("-----並列-----")
-	C.init()
+	fmt.Println("-----並列-----")
+	initialize()
 
 	t = time.Now()
-	for k := 0; k < N; k++ {
-		for i := k + 1; i < N; i++ {
+	for k := 0; k < size; k++ {
+		for i := k + 1; i < size; i++ {
 			//fmt.Println(k, i)
 			wg.Add(1)
 			go call1WG(k, i)
 		}
 		wg.Wait()
-		for i := k + 1; i < N; i++ {
-			for j := k + 1; j < N; j++ {
+		for i := k + 1; i < size; i++ {
+			for j := k + 1; j < size; j++ {
 				//fmt.Println(k, i, j)
 				wg.Add(1)
 				go call2WG(k, i, j)
@@ -263,6 +322,6 @@ func main() {
 		wg.Wait()
 	}
 	t2 = time.Now().Sub(t)
-	C.comp()
+	comp()
 	fmt.Println("並列：", t2, "\n")
 }
