@@ -13,7 +13,7 @@ var A [size][size]big.Float
 var B [size]big.Float
 var calc [size][size]big.Float
 
-const size = 300
+const size = 500
 
 func initialize() {
 	var a, b big.Float
