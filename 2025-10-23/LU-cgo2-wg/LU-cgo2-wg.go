@@ -197,34 +197,27 @@ import (
 	"time"
 )
 
-var wg sync.WaitGroup
+func call1(k int, i int, N int) {
 
-func call1(k int, i int) {
-	/*
-		c := make(chan int, 1)
-		c <- int(C.LUfact1(C.int(k), C.int(i)))
-	*/
 	C.LUfact1(C.int(k), C.int(i))
+
+	for j := k + 1; j < N; j++ {
+		call2(k, i, j)
+	}
 }
 
 func call2(k int, i int, j int) {
-	/*
-		c := make(chan int, 1)
-		c <- int(C.LUfact2(C.int(k), C.int(i), C.int(j)))
-	*/
+
 	C.LUfact2(C.int(k), C.int(i), C.int(j))
 }
 
-func call1WG(k int, i int, N int) {
+func call1WG(k int, i int, N int, wg *sync.WaitGroup) {
 	defer wg.Done()
 	var wg2 sync.WaitGroup
-	/*
-		c := make(chan int, 1)
-		c <- int(C.LUfact1(C.int(k), C.int(i)))
-	*/
+
 	C.LUfact1(C.int(k), C.int(i))
+
 	for j := k + 1; j < N; j++ {
-		//fmt.Println(k, i, j)
 		wg2.Add(1)
 		go call2WG(k, i, j, &wg2)
 	}
@@ -233,15 +226,13 @@ func call1WG(k int, i int, N int) {
 
 func call2WG(k int, i int, j int, wg2 *sync.WaitGroup) {
 	defer wg2.Done()
-	/*
-		c := make(chan int, 1)
-		c <- int(C.LUfact2(C.int(k), C.int(i), C.int(j)))
-	*/
+
 	C.LUfact2(C.int(k), C.int(i), C.int(j))
 }
 
 func main() {
 	var t time.Time
+	var wg sync.WaitGroup
 
 	N := int(C.def())
 	C.init()
@@ -252,13 +243,7 @@ func main() {
 	for k := 0; k < N; k++ {
 		for i := k + 1; i < N; i++ {
 			//fmt.Println(k, i)
-			call1(k, i)
-		}
-		for i := k + 1; i < N; i++ {
-			for j := k + 1; j < N; j++ {
-				//fmt.Println(k, i, j)
-				call2(k, i, j)
-			}
+			call1(k, i, N)
 		}
 	}
 	t2 := time.Now().Sub(t)
@@ -273,19 +258,9 @@ func main() {
 		for i := k + 1; i < N; i++ {
 			//fmt.Println(k, i)
 			wg.Add(1)
-			go call1WG(k, i, N)
+			go call1WG(k, i, N, &wg)
 		}
 		wg.Wait()
-		/*
-			for i := k + 1; i < N; i++ {
-				for j := k + 1; j < N; j++ {
-					//fmt.Println(k, i, j)
-					wg.Add(1)
-					go call2WG(k, i, j)
-				}
-			}
-			wg.Wait()
-		*/
 	}
 	t2 = time.Now().Sub(t)
 	//C.comp()
