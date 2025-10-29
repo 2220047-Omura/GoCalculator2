@@ -260,6 +260,23 @@ func main() {
 	//C.comp()
 	fmt.Println("逐次：", t2, "\n")
 
+	//fmt.Println("-----アンローリング(逐次)-----")
+	C.init()
+
+	t = time.Now()
+	for k := 0; k < N; k++ {
+		for i := k + 1; i < N; i += 2 {
+			//fmt.Println(k, i)
+			call1(k, i, N)
+			if i+1 != N {
+				call1(k, i+1, N)
+			}
+		}
+	}
+	t2 = time.Now().Sub(t)
+	//C.comp()
+	fmt.Println("アンローリング(逐次)：", t2, "\n")
+
 	//fmt.Println("-----並列-----")
 	C.init()
 
@@ -275,6 +292,26 @@ func main() {
 	t2 = time.Now().Sub(t)
 	//C.comp()
 	fmt.Println("並列：", t2, "\n")
+
+	//fmt.Println("-----アンローリング(並列)-----")
+	C.init()
+
+	t = time.Now()
+	for k := 0; k < N; k++ {
+		for i := k + 1; i < N; i += 2 {
+			//fmt.Println(k, i)
+			wg.Add(1)
+			go call1WG(k, i, N, &wg)
+			if i+1 != N {
+				wg.Add(1)
+				go call1WG(k, i+1, N, &wg)
+			}
+		}
+		wg.Wait()
+	}
+	t2 = time.Now().Sub(t)
+	//C.comp()
+	fmt.Println("アンローリング(並列)：", t2, "\n")
 
 	//fmt.Println("-----一部並列-----")
 	C.init()
@@ -292,4 +329,51 @@ func main() {
 	//C.comp()
 	fmt.Println("一部並列：", t2, "\n")
 
+	//fmt.Println("-----アンローリング(一部並列)-----")
+	C.init()
+
+	t = time.Now()
+	for k := 0; k < N; k++ {
+		for i := k + 1; i < N; i += 2 {
+			//fmt.Println(k, i)
+			wg.Add(1)
+			go call(k, i, N, &wg)
+			if i+1 != N {
+				wg.Add(1)
+				go call(k, i+1, N, &wg)
+			}
+		}
+		wg.Wait()
+	}
+	t2 = time.Now().Sub(t)
+	//C.comp()
+	fmt.Println("アンローリング(一部並列)：", t2, "\n")
+
+	//fmt.Println("-----アンローリング(4)-----")
+	C.init()
+
+	t = time.Now()
+	for k := 0; k < N; k++ {
+		for i := k + 1; i < N; i += 4 {
+			//fmt.Println(k, i)
+			wg.Add(1)
+			go call(k, i, N, &wg)
+			if i+1 < N {
+				wg.Add(1)
+				go call(k, i+1, N, &wg)
+				if i+2 < N {
+					wg.Add(1)
+					go call(k, i+2, N, &wg)
+					if i+3 < N {
+						wg.Add(1)
+						go call(k, i+3, N, &wg)
+					}
+				}
+			}
+		}
+		wg.Wait()
+	}
+	t2 = time.Now().Sub(t)
+	//C.comp()
+	fmt.Println("アンローリング(4)：", t2, "\n")
 }
