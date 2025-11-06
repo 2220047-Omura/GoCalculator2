@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"math/big"
+	"math/rand/v2"
 	"sync"
 	"time"
 )
@@ -13,33 +14,24 @@ var L [size][size]big.Float
 var U [size][size]big.Float
 var B [size]big.Float
 
-const size = 8
+var MUL [size][size]big.Float
+var SUM [size][size]big.Float
+
+const size = 300
 
 func initialize() {
-	//var a, b big.Float
-	var a, n, i2, j2 big.Float
+
+	//setHilbert()
+	setRand()
+	//setSimple()
+
 	one := big.NewFloat(1)
 	for i := 0; i < size; i++ {
 		for j := 0; j < size; j++ {
-			/*
-				r := rand.Float64()
-				a.SetFloat64(r)
-				r = rand.Float64()
-				b.SetFloat64(r)
-				A[i][j].SetPrec(1024).Mul(&a, &b)
-			*/
-
-			i2.SetInt64(int64(i))
-			j2.SetInt64(int64(j))
-			n.Add(&i2, &j2)
-			// n.Add(&n, big.NewFloat(1))
-			n.Add(&n, one)
-			// a.SetPrec(1024).Quo(big.NewFloat(1), &n)
-			a.SetPrec(1024).Quo(one, &n)
-			A[i][j].SetPrec(1024).Set(&a)
-
 			L[i][j].SetPrec(1024)
 			U[i][j].SetPrec(1024)
+			MUL[i][j].SetPrec(1024)
+			SUM[i][j].SetPrec(1024)
 			if i == j {
 				L[i][j].Set(one)
 			}
@@ -52,52 +44,104 @@ func initialize() {
 	}
 }
 
-func Uset(i int, j int) {
-	var MUL, SUM big.Float
-	for k := 0; k < size; k++ {
-		if k != i {
-			MUL.Mul(&L[i][k], &U[k][j])
-			SUM.Add(&SUM, &MUL)
+func setHilbert() {
+	var a, n, i2, j2 big.Float
+	one := big.NewFloat(1)
+	for i := 0; i < size; i++ {
+		for j := 0; j < size; j++ {
+			i2.SetInt64(int64(i))
+			j2.SetInt64(int64(j))
+			n.Add(&i2, &j2)
+			n.Add(&n, one)
+			a.SetPrec(1024).Quo(one, &n)
+			A[i][j].SetPrec(1024).Set(&a)
 		}
 	}
-	U[i][j].Sub(&A[i][j], &SUM)
+}
+
+func setRand() {
+	var a, b big.Float
+	for i := 0; i < size; i++ {
+		for j := 0; j < size; j++ {
+			r := rand.Float64()
+			a.SetFloat64(r)
+			r = rand.Float64()
+			b.SetFloat64(r)
+			A[i][j].SetPrec(1024).Mul(&a, &b)
+		}
+	}
+}
+
+func setSimple() {
+	var n big.Float
+	for i := 0; i < size; i++ {
+		for j := 0; j < size; j++ {
+			n.Add(&n, big.NewFloat(1))
+			A[i][j].SetPrec(1024).Set(&n)
+		}
+	}
+}
+
+func Uset(i int, j int) {
+	//var MUL, SUM big.Float
+	for k := 0; k < size; k++ {
+		if k != i {
+			MUL[i][j].Mul(&L[i][k], &U[k][j])
+			SUM[i][j].Add(&SUM[i][j], &MUL[i][j])
+			//MUL.Mul(&L[i][k], &U[k][j])
+			//SUM.Add(&SUM, &MUL)
+		}
+	}
+	U[i][j].Sub(&A[i][j], &SUM[i][j])
+	//U[i][j].Sub(&A[i][j], &SUM)
 }
 
 func Lset(j int, i int) {
-	var MUL, SUM big.Float
+	//var MUL, SUM big.Float
 	for k := 0; k < size; k++ {
 		if k != i {
-			MUL.Mul(&L[j][k], &U[k][i])
-			SUM.Add(&SUM, &MUL)
+			MUL[j][i].Mul(&L[j][k], &U[k][i])
+			SUM[j][i].Add(&SUM[j][i], &MUL[j][i])
+			//MUL.Mul(&L[j][k], &U[k][i])
+			//SUM.Add(&SUM, &MUL)
 		}
 	}
-	SUM.Sub(&A[j][i], &SUM)
-	L[j][i].Quo(&SUM, &U[i][i])
+	SUM[j][i].Sub(&A[j][i], &SUM[j][i])
+	L[j][i].Quo(&SUM[j][i], &U[i][i])
+	//SUM.Sub(&A[j][i], &SUM)
+	//L[j][i].Quo(&SUM, &U[i][i])
 }
 
 func UsetWG(i int, j int) {
 	defer wg.Done()
-	var MUL, SUM big.Float
+	//var MUL, SUM big.Float
 	for k := 0; k < size; k++ {
 		if k != i {
-			MUL.Mul(&L[i][k], &U[k][j])
-			SUM.Add(&SUM, &MUL)
+			//MUL.Mul(&L[i][k], &U[k][j])
+			//SUM.Add(&SUM, &MUL)
+			MUL[i][j].Mul(&L[i][k], &U[k][j])
+			SUM[i][j].Add(&SUM[i][j], &MUL[i][j])
 		}
 	}
-	U[i][j].Sub(&A[i][j], &SUM)
+	//U[i][j].Sub(&A[i][j], &SUM)
+	U[i][j].Sub(&A[i][j], &SUM[i][j])
 }
 
 func LsetWG(j int, i int) {
 	defer wg.Done()
-	var MUL, SUM big.Float
+	//var MUL, SUM big.Float
 	for k := 0; k < size; k++ {
 		if k != i {
-			MUL.Mul(&L[j][k], &U[k][i])
-			SUM.Add(&SUM, &MUL)
+			//MUL.Mul(&L[j][k], &U[k][i])
+			//SUM.Add(&SUM, &MUL)
+			MUL[j][i].Mul(&L[j][k], &U[k][i])
+			SUM[j][i].Add(&SUM[j][i], &MUL[j][i])
 		}
 	}
-	SUM.Sub(&A[j][i], &SUM)
-	L[j][i].Quo(&SUM, &U[i][i])
+	//SUM.Sub(&A[j][i], &SUM)
+	//L[j][i].Quo(&SUM, &U[i][i])
+	SUM[j][i].Sub(&A[j][i], &SUM[j][i])
+	L[j][i].Quo(&SUM[j][i], &U[i][i])
 }
 
 func comp() {
@@ -135,18 +179,6 @@ func comp() {
 	}
 }
 
-func SimpleA(A *[size][size]big.Float) {
-	//各要素が左上から1, 2, 3, ... と決められる行列を生成
-
-	var n big.Float
-	for i := 0; i < size; i++ {
-		for j := 0; j < size; j++ {
-			n.Add(&n, big.NewFloat(1))
-			A[i][j].SetPrec(1024).Set(&n)
-		}
-	}
-}
-
 func PrintM(M *[size][size]big.Float) {
 	//行列をプリント
 
@@ -165,7 +197,6 @@ func main() {
 
 	//fmt.Println("-----逐次-----")
 	initialize()
-	//SimpleA(&A)
 	ts = time.Now()
 	for i := 0; i < size; i++ {
 		for j := i; j < size; j++ {
@@ -179,11 +210,10 @@ func main() {
 	fmt.Println("逐次：", te.Sub(ts), "\n")
 	//PrintM(&L)
 	//PrintM(&U)
-	comp()
+	//comp()
 
 	//fmt.Println("-----並列-----")
 	initialize()
-	//SimpleA(&A)
 	ts = time.Now()
 	for i := 0; i < size; i++ {
 		for j := i; j < size; j++ {
@@ -201,5 +231,5 @@ func main() {
 	fmt.Println("並列：", te.Sub(ts), "\n")
 	//PrintM(&L)
 	//PrintM(&U)
-	comp()
+	//comp()
 }

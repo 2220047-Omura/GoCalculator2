@@ -1,14 +1,16 @@
 package main
 
 // #cgo CFLAGS: -I/opt/homebrew/include
-// #cgo LDFLAGS: -L/opt/homebrew/lib -lmpfr -lgmp
+// #cgo LDFLAGS: -L/opt/homebrew/lib -lmpfi -lmpfr -lgmp
 //
 // #include <stdio.h>
 // #include <stdlib.h>
 // //#include <time.h>
-// #include <mpfr.h>
+// #include <mpfi.h>
+// #include <mpfi_io.h>
+// //#include <mpfr.h>
 //
-// void printInterval(__mpfr_struct *b);
+// void printInterval(__mpfi_struct *b);
 // void comp(void);
 //
 // #define N 300
@@ -16,88 +18,90 @@ package main
 // int acc = 1024;
 // char buf[256];
 //
-// mpfr_t hilbert[N][N];
-// mpfr_t b[N];
-// mpfr_t L[N][N];
-// mpfr_t U[N][N];
+// mpfi_t hilbert[N][N];
+// mpfi_t b[N];
+// mpfi_t L[N][N];
+// mpfi_t U[N][N];
 //
-// mpfr_t SUM[N][N];
-// mpfr_t MUL[N][N];
+// mpfi_t SUM[N][N];
+// mpfi_t MUL[N][N];
 //
-// mpfr_t tmp1;
-// mpfr_t tmp2;
-// //mpfr_t tmp;
+// mpfi_t tmp1;
+// mpfi_t tmp2;
+// //mpfi_t tmp;
 //
 // int def(void){
 //     return N;
 // }
 //
 //
-// void printMatrix(__mpfr_struct *array) {
+// void printMatrix(__mpfi_struct *array) {
 //     for (int i = 0; i < N; i++) {
 //         for (int j = 0; j < N; j++) {
-//             //printInterval(ptr(array, i, j));
-//	           mpfr_printf("%.20RNf\n",ptr(array, i, j));
+//             printInterval(ptr(array, i, j));
 //         }
 //         printf("\n");
 //     }
 // }
+//
 // int init(void) {
 //	   mpfr_t a;
 // 	   mpfr_init2(a, acc);
 //
 //     // allocate
 //     for (int i = 0; i < N; i++) {
-//         mpfr_init2(b[i], acc);
+//         mpfi_init2(b[i], acc);
 //         for (int j = 0; j < N; j++) {
-//             mpfr_init2(hilbert[i][j], acc);
-//	           mpfr_init2(SUM[i][j], acc);
-//	           mpfr_init2(MUL[i][j], acc);
-//	           mpfr_init2(L[i][j], acc);
-//	           mpfr_init2(U[i][j], acc);
+//             mpfi_init2(hilbert[i][j], acc);
+//	           mpfi_init2(SUM[i][j], acc);
+//	           mpfi_init2(MUL[i][j], acc);
+//	           mpfi_init2(L[i][j], acc);
+//	           mpfi_init2(U[i][j], acc);
 //         }
 //     }
-//     //mpfr_init2(tmp, acc);
-//     //mpfr_init2(MUL, acc);
-//     mpfr_init2(tmp1, acc);
-//     mpfr_init2(tmp2, acc);
+//     //mpfi_init2(tmp, acc);
+//     //mpfi_init2(MUL, acc);
+//     mpfi_init2(tmp1, acc);
+//     mpfi_init2(tmp2, acc);
 //
 //     // initialize
-//     mpfr_set_str(b[0], "1", 10, MPFR_RNDN);
+//     mpfi_set_str(b[0], "1", 10);
 //     for (int i = 1; i < N; i++) {
-//         mpfr_set_str(b[i], "0", 10, MPFR_RNDN);
+//         mpfi_set_str(b[i], "0", 10);
 //     }
 //     for (int i = 0; i < N; i++) {
 //         for (int j = 0; j < N; j++) {
 //
 //             if (i != j){
-//                 mpfr_set_str(L[i][j], "0", 10, MPFR_RNDN);
+//                 mpfi_set_str(L[i][j], "0", 10);
 //	           } else {
-//                 mpfr_set_str(L[i][i], "1", 10, MPFR_RNDN);
+//                 mpfi_set_str(L[i][i], "1", 10);
 //             }
-//             mpfr_set_str(U[i][j], "0", 10, MPFR_RNDN);
-//             mpfr_set_str(SUM[i][j], "0", 10, MPFR_RNDN);
+//             mpfi_set_str(U[i][j], "0", 10);
+//             mpfi_set_str(SUM[i][j], "0", 10);
 //
 //	           double r = ((double)rand())/RAND_MAX;
-//	           mpfr_set_d(hilbert[i][j], r, MPFR_RNDN);
+//	           mpfr_set_d(a, r, MPFR_RNDN);
+//	           mpfi_interv_fr(hilbert[i][j], a, a);
+//
 // /*
-//             mpfr_set_str(tmp1, "1", 10, MPFR_RNDN);
+//             mpfi_set_str(tmp1, "1", 10);
 //             sprintf(buf, "%d", (i+1)+(j+1)-1);
-//             mpfr_set_str(tmp2, buf, 10, MPFR_RNDN);
-//             mpfr_div(hilbert[i][j], tmp1, tmp2, MPFR_RNDN);
+//             mpfi_set_str(tmp2, buf, 10);
+//             mpfi_div(hilbert[i][j], tmp1, tmp2);
 // */
 //         }
 //     }
 //
 // /*
 // printf("----- Hilbert Matrix -----\n\n");
-// printMatrix((__mpfr_struct *)hilbert);
+// printMatrix((__mpfi_struct *)hilbert);
 //
 // printf("----- L -----\n\n");
-// printMatrix((__mpfr_struct *)L);
+// printMatrix((__mpfi_struct *)L);
 //
 // printf("----- U -----\n\n");
-// printMatrix((__mpfr_struct *)U);
+// printMatrix((__mpfi_struct *)U);
 // */
 //
 //
@@ -106,107 +110,109 @@ package main
 //
 // void Uset(int i,int j){
 // /*
-//	   mpfr_t SUM;
-//	   mpfr_t MUL;
-//     mpfr_init2(SUM, acc);
-//     mpfr_init2(MUL, acc);
-// 	   mpfr_set_str(SUM,"0",10,MPFR_RNDN);
-//     //mpfr_set_str(MUL,"0",10,MPFR_RNDN);
+//	   mpfi_t SUM;
+//	   mpfi_t MUL;
+//     mpfi_init2(SUM, acc);
+//     mpfi_init2(MUL, acc);
+// 	   mpfi_set_str(SUM,"0",10);
+//     //mpfi_set_str(MUL,"0",10);
 // */
 // 	   for (int k = 0; k < N; k++) {
 //	       if (k != i){
-//	           mpfr_mul(MUL[i][j], L[i][k], U[k][j], MPFR_RNDN);
-//	           mpfr_add(SUM[i][j], SUM[i][j], MUL[i][j], MPFR_RNDN);
+//	           mpfi_mul(MUL[i][j], L[i][k], U[k][j]);
+//	           mpfi_add(SUM[i][j], SUM[i][j], MUL[i][j]);
 //	       }
 //	   }
-//	   mpfr_sub(U[i][j], hilbert[i][j], SUM[i][j], MPFR_RNDN);
-//     //printMatrix((__mpfr_struct *)U);
+//	   mpfi_sub(U[i][j], hilbert[i][j], SUM[i][j]);
+//     //printMatrix((__mpfi_struct *)U);
 // }
 //
 // void Lset(int j,int i){
 // /*
-//	   mpfr_t SUM;
-//	   mpfr_t MUL;
-//     mpfr_init2(SUM, acc);
-//     mpfr_init2(MUL, acc);
-//     mpfr_set_str(SUM, "0", 10,MPFR_RNDN);
+//	   mpfi_t SUM;
+//	   mpfi_t MUL;
+//     mpfi_init2(SUM, acc);
+//     mpfi_init2(MUL, acc);
+//     mpfi_set_str(SUM, "0", 10);
 // */
 // 	   for (int k = 0; k < N; k++) {
 //	       if (k != i){
-//	           mpfr_mul(MUL[j][i], L[j][k], U[k][i], MPFR_RNDN);
-//	           mpfr_add(SUM[j][i], SUM[j][i], MUL[j][i], MPFR_RNDN);
+//	           mpfi_mul(MUL[j][i], L[j][k], U[k][i]);
+//	           mpfi_add(SUM[j][i], SUM[j][i], MUL[j][i]);
 //	       }
 //	   }
-//	   mpfr_sub(SUM[j][i], hilbert[j][i], SUM[j][i], MPFR_RNDN);
-//	   mpfr_div(L[j][i], SUM[j][i], U[i][i], MPFR_RNDN);
-//     //printMatrix((__mpfr_struct *)L);
+//	   mpfi_sub(SUM[j][i], hilbert[j][i], SUM[j][i]);
+//	   mpfi_div(L[j][i], SUM[j][i], U[i][i]);
+//     //printMatrix((__mpfi_struct *)L);
 // }
 //
 //
 // void comp(void) {
 //     for (int i = 1; i < N; i++) {
-//	       mpfr_set(hilbert[i][i], U[i][i], MPFR_RNDN);
+//	       mpfi_set(hilbert[i][i], U[i][i]);
 //         for (int j = i + 1; j < N; j++) {
-//	           mpfr_set(hilbert[i][j], U[i][j], MPFR_RNDN);
-//	           mpfr_set(hilbert[j][i], L[j][i], MPFR_RNDN);
+//	           mpfi_set(hilbert[i][j], U[i][j]);
+//	           mpfi_set(hilbert[j][i], L[j][i]);
 //         }
 //     }
 //
-// 	   mpfr_t tmp;
-//     mpfr_init2(tmp, acc);
+// 	   mpfi_t tmp;
+//     mpfi_init2(tmp, acc);
 //     // forward substitution
 //     for (int i = 1; i < N; i++) {
 //         for (int j = 0; j <= i - 1; j++) {
-//             mpfr_mul(tmp, b[j], hilbert[i][j], MPFR_RNDN);
-//             mpfr_sub(b[i], b[i], tmp, MPFR_RNDN);
+//             mpfi_mul(tmp, b[j], hilbert[i][j]);
+//             mpfi_sub(b[i], b[i], tmp);
 //         }
 //     }
 //
 //     // backward substitution
 //     for (int i = N-1; i >= 0; i--) {
 //         for (int j = N-1; j > i; j--) {
-//             mpfr_mul(tmp, b[j], hilbert[i][j], MPFR_RNDN);
-//             mpfr_sub(b[i], b[i], tmp, MPFR_RNDN);
+//             mpfi_mul(tmp, b[j], hilbert[i][j]);
+//             mpfi_sub(b[i], b[i], tmp);
 //         }
-//         mpfr_div(b[i], b[i], hilbert[i][i], MPFR_RNDN);
+//         mpfi_div(b[i], b[i], hilbert[i][i]);
 //     }
 //
 //     // print results
 //	   printf("\n");
 //     mpfr_exp_t exp;
 //     for (int i = 0; i < N; i++) {
-// /*
+//
 //         mpfr_get_str(buf, &exp, 10, 15,
 //             &((__mpfi_struct *)&(b[i]))->left, MPFR_RNDD);
 //         printf("[%sx(%d), ", buf, (int)exp);
 //         mpfr_get_str(buf, &exp, 10, 15,
 //             &((__mpfi_struct *)&(b[i]))->right, MPFR_RNDU);
 //         printf("%sx(%d)]\n", buf, (int)exp);
-// */
-//	       mpfr_printf("%.128RNf\n",b[i]);
+//
+//	       //mpfr_printf("%.128RNf\n",b[i]);
 //     }
 //	   printf("\n");
 //
 //     // deallocate
 //     for (int i = 0; i < N; i++) {
-//         mpfr_clear(b[i]);
+//         mpfi_clear(b[i]);
 //         for (int j = 0; j < N; j++) {
-//             mpfr_clear(hilbert[i][j]);
+//             mpfi_clear(hilbert[i][j]);
 //         }
 //     }
-//     mpfr_clear(tmp1);
-//     mpfr_clear(tmp2);
+//     mpfi_clear(tmp1);
+//     mpfi_clear(tmp2);
 // }
 //
-// void printM(__mpfr_struct *b) {
+// void printM(__mpfi_struct *b) {
 //
 // }
 //
-// void printInterval(__mpfr_struct *b) {
-// 	   for (int i = 0;i < N;i++){
-//	       mpfr_printf("%.128RNf\n",b[i]);
-// 	   }
+// void printInterval(__mpfi_struct *b) {
 // /*
+// 	   for (int i = 0;i < N;i++){
+//	       mpfi_printf("%.128RNf\n",b[i]);
+// 	   }
+// */
+//
 //     char buf[256];
 //     mpfr_exp_t exp;
 //     mpfr_get_str(buf, &exp, 10, 15,
@@ -216,9 +222,9 @@ package main
 //     mpfr_get_str(buf, &exp, 10, 15,
 //         &(b->right), MPFR_RNDU);
 //     printf("%sx(%d)]\n", buf, (int)exp);
-// */
-// }
 //
+// }
+// /*
 // void printtest(void) {
 //     mpfr_t b[N];
 //     mpfr_t one;
@@ -231,7 +237,7 @@ package main
 //         mpfr_set_str(b[i], buf, 10, MPFR_RNDN);
 //         mpfr_div(b[i], one, b[i], MPFR_RNDN);
 //     }
-// /*
+//
 //     mpfr_exp_t exp;
 //     for (int i = 0; i < N; i++) {
 //         mpfr_get_str(buf, &exp, 10, 15,
@@ -241,7 +247,7 @@ package main
 //             &((__mpfi_struct *)&(b[i]))->right, MPFR_RNDU);
 //         printf("%sx(%d)]\n", buf, (int)exp);
 //     }
-// */
+//
 //
 //     for (int i = 0; i < N; i++) {
 //         printInterval((__mpfr_struct *)&(b[i]));
@@ -251,7 +257,7 @@ package main
 //     }
 //     mpfr_clear(one);
 // }
-//
+// */
 //
 //
 //
