@@ -1,0 +1,250 @@
+package main
+
+import (
+	"fmt"
+	"math/big"
+	"math/rand/v2"
+	"sync"
+	"time"
+)
+
+var wg sync.WaitGroup
+var A [size][size]big.Float
+var L [size][size]big.Float
+var U [size][size]big.Float
+var B [size]big.Float
+var P [size][size]big.Float
+
+var MUL [size][size]big.Float
+var SUM [size][size]big.Float
+
+const size = 8
+
+func initialize() {
+
+	//setHilbert()
+	//setRand()
+	setSimple()
+
+	one := big.NewFloat(1)
+	for i := 0; i < size; i++ {
+		for j := 0; j < size; j++ {
+			L[i][j].SetPrec(1024)
+			U[i][j].SetPrec(1024)
+			MUL[i][j].SetPrec(1024)
+			SUM[i][j].SetPrec(1024)
+			if i == j {
+				L[i][j].Set(one)
+			}
+		}
+	}
+
+	B[0].SetPrec(1024).SetString("1")
+	P[0][0].SetPrec(1024).SetString("1")
+	for i := 1; i < size; i++ {
+		B[i].SetPrec(1024).SetString("0")
+		P[i][i].SetPrec(1024).SetString("1")
+	}
+}
+
+func setHilbert() {
+	var a, n, i2, j2 big.Float
+	one := big.NewFloat(1)
+	for i := 0; i < size; i++ {
+		for j := 0; j < size; j++ {
+			i2.SetInt64(int64(i))
+			j2.SetInt64(int64(j))
+			n.Add(&i2, &j2)
+			n.Add(&n, one)
+			a.SetPrec(1024).Quo(one, &n)
+			A[i][j].SetPrec(1024).Set(&a)
+		}
+	}
+}
+
+func setRand() {
+	var a, b big.Float
+	for i := 0; i < size; i++ {
+		for j := 0; j < size; j++ {
+			r := rand.Float64()
+			a.SetFloat64(r)
+			r = rand.Float64()
+			b.SetFloat64(r)
+			A[i][j].SetPrec(1024).Mul(&a, &b)
+		}
+	}
+}
+
+func setSimple() {
+	var n big.Float
+	for i := 0; i < size; i++ {
+		for j := 0; j < size; j++ {
+			n.Add(&n, big.NewFloat(1))
+			A[i][j].SetPrec(1024).Set(&n)
+		}
+	}
+}
+
+func Uset(i int, j int) {
+	for k := 0; k < size; k++ {
+		if k != i {
+			MUL[i][j].Mul(&L[i][k], &U[k][j])
+			SUM[i][j].Add(&SUM[i][j], &MUL[i][j])
+		}
+	}
+	U[i][j].Sub(&A[i][j], &SUM[i][j])
+}
+
+func Lset(j int, i int) {
+	for k := 0; k < size; k++ {
+		if k != i {
+			MUL[j][i].Mul(&L[j][k], &U[k][i])
+			SUM[j][i].Add(&SUM[j][i], &MUL[j][i])
+		}
+	}
+	SUM[j][i].Sub(&A[j][i], &SUM[j][i])
+	L[j][i].Quo(&SUM[j][i], &U[i][i])
+}
+
+func UsetWG(i int, j int) {
+	defer wg.Done()
+
+	for k := 0; k < size; k++ {
+		if k != i {
+			MUL[i][j].Mul(&L[i][k], &U[k][j])
+			SUM[i][j].Add(&SUM[i][j], &MUL[i][j])
+		}
+	}
+	U[i][j].Sub(&A[i][j], &SUM[i][j])
+}
+
+func LsetWG(j int, i int) {
+	defer wg.Done()
+
+	for k := 0; k < size; k++ {
+		if k != i {
+			MUL[j][i].Mul(&L[j][k], &U[k][i])
+			SUM[j][i].Add(&SUM[j][i], &MUL[j][i])
+		}
+	}
+	SUM[j][i].Sub(&A[j][i], &SUM[j][i])
+	L[j][i].Quo(&SUM[j][i], &U[i][i])
+}
+
+func Pivot(k int) {
+	var n_max big.Float
+	n_max.Abs(&A[k][k])
+	pivot_n := k
+
+	for i := k + 1; i < size; i++ {
+		if n_max.Cmp(&A[i][k]) == -1 {
+			n_max.Set(&A[i][k])
+			pivot_n = i
+		}
+	}
+
+	P[k], P[pivot_n] = P[pivot_n], P[k]
+	PrintM(&P)
+
+	A[k], A[pivot_n] = A[pivot_n], A[k]
+	PrintM(&A)
+
+	L[k], L[pivot_n] = L[pivot_n], L[k]
+	PrintM(&L)
+}
+
+func comp() {
+	for i := 0; i < size; i++ {
+		A[i][i].Set(&U[i][i])
+		for j := i + 1; j < size; j++ {
+			A[i][j].Set(&U[i][j])
+			A[j][i].Set(&L[j][i])
+		}
+	}
+	//PrintM(&A)
+	var tmp, p big.Float
+	tmp.SetPrec(1024)
+
+	// forward substitution
+	for i := 1; i < size; i++ {
+		for j := 0; j <= i-1; j++ {
+			tmp.Mul(&B[j], &A[i][j])
+			B[i].Sub(&B[i], &tmp)
+		}
+	}
+
+	// backward substitution
+	for i := size - 1; i >= 0; i-- {
+		for j := size - 1; j > i; j-- {
+			tmp.Mul(&B[j], &A[i][j])
+			B[i].Sub(&B[i], &tmp)
+		}
+		B[i].Quo(&B[i], &A[i][i])
+	}
+
+	for i := 0; i < size; i++ {
+		p.SetPrec(100).Set(&B[i])
+		fmt.Println(&p)
+	}
+}
+
+func PrintM(M *[size][size]big.Float) {
+	//行列をプリント
+
+	for i := 0; i < size; i++ {
+		print("\n")
+		for j := 0; j < size; j++ {
+			fmt.Print(&M[i][j], " ")
+		}
+	}
+	print("\n")
+}
+
+func main() {
+	//fmt.Println("【クラウト法】")
+	var ts, te time.Time
+
+	//fmt.Println("-----逐次-----")
+	initialize()
+	ts = time.Now()
+	for i := 0; i < size; i++ {
+		for j := i; j < size; j++ {
+			Uset(i, j)
+		}
+		if U[i][i].Cmp(big.NewFloat(0)) == 0 {
+			fmt.Println("Pivot")
+			Pivot(i)
+		}
+		for j := i + 1; j < size; j++ {
+			Lset(j, i)
+		}
+	}
+	te = time.Now()
+	fmt.Println("逐次：", te.Sub(ts), "\n")
+	//PrintM(&L)
+	//PrintM(&U)
+	//comp()
+
+	/*
+		//fmt.Println("-----並列-----")
+		initialize()
+		ts = time.Now()
+		for i := 0; i < size; i++ {
+			for j := i; j < size; j++ {
+				wg.Add(1)
+				go UsetWG(i, j)
+			}
+			wg.Wait()
+			for j := i + 1; j < size; j++ {
+				wg.Add(1)
+				go LsetWG(j, i)
+			}
+			wg.Wait()
+		}
+		te = time.Now()
+		fmt.Println("並列：", te.Sub(ts), "\n")
+		//PrintM(&L)
+		//PrintM(&U)
+		//comp()
+	*/
+}
