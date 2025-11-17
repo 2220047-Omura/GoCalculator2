@@ -249,6 +249,29 @@ func call4(k int, i int, N int, wg *sync.WaitGroup) {
 	}
 }
 
+func callUnroll(k int, i int, N int, M int) {
+	for i2 := i; i2 < i+M; i2++ {
+		//fmt.Println("(k, i2) = ", k, i2)
+		C.LUfact1(C.int(k), C.int(i2))
+
+		for j := k + 1; j < N; j++ {
+			C.LUfact2(C.int(k), C.int(i2), C.int(j))
+		}
+	}
+}
+
+func callUnrollWG(k int, i int, N int, wg *sync.WaitGroup, M int) {
+	defer wg.Done()
+	for i2 := i; i2 < i+M; i2++ {
+		//fmt.Println("(k, i2) = ", k, i2)
+		C.LUfact1(C.int(k), C.int(i2))
+
+		for j := k + 1; j < N; j++ {
+			C.LUfact2(C.int(k), C.int(i2), C.int(j))
+		}
+	}
+}
+
 func main() {
 	var t time.Time
 	var wg sync.WaitGroup
@@ -304,6 +327,28 @@ func main() {
 	t2 = time.Now().Sub(t)
 	//C.comp()
 	fmt.Println("アンローリング(逐次)：", t2, "\n")
+
+	//fmt.Println("-----アンローリング改(逐次)-----")
+	C.init()
+
+	p := 8
+	t = time.Now()
+	for k := 0; k < N; k++ {
+		M := (N - k - 1) / p
+		//fmt.Println("M:", M)
+		for i := k + 1; i < k+1+M*p; i += M {
+			//fmt.Println("(k, i) =", k, i)
+			callUnroll(k, i, N, M)
+		}
+		for i := k + 1 + M*p; i < N; i++ {
+			//fmt.Println("あまり")
+			//fmt.Println("(k, i) =", k, i)
+			call1(k, i, N)
+		}
+	}
+	t2 = time.Now().Sub(t)
+	//comp()
+	fmt.Println("アンローリング改(逐次)：", t2, "\n")
 
 	//fmt.Println("-----並列-----")
 	C.init()
@@ -420,4 +465,29 @@ func main() {
 	t2 = time.Now().Sub(t)
 	//C.comp()
 	fmt.Println("アンローリング(4)：", t2, "\n")
+
+	//fmt.Println("-----アンローリング(一部並列)-----")
+	C.init()
+
+	p = 4
+	t = time.Now()
+	for k := 0; k < N; k++ {
+		M := (N - k - 1) / p
+		//fmt.Println("M:", M)
+		for i := k + 1; i < k+1+M*p; i += M {
+			//fmt.Println("(k, i) =", k, i)
+			wg.Add(1)
+			go callUnrollWG(k, i, N, &wg, M)
+		}
+		for i := k + 1 + M*p; i < N; i++ {
+			//fmt.Println("あまり")
+			//fmt.Println("(k, i) =", k, i)
+			wg.Add(1)
+			go call3(k, i, N, &wg)
+		}
+		wg.Wait()
+	}
+	t2 = time.Now().Sub(t)
+	//C.comp()
+	fmt.Println("アンローリング改(一部並列)：", t2, "\n")
 }

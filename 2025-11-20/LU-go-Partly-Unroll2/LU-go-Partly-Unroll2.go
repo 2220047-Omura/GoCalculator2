@@ -211,7 +211,7 @@ func main() {
 	//C.comp()
 	fmt.Println("アンローリング(逐次)：", t2, "\n")
 
-	//fmt.Println("-----アンローリング(逐次)-----")
+	//fmt.Println("-----アンローリング改(逐次)-----")
 	initialize()
 
 	p := 8
@@ -349,7 +349,7 @@ func main() {
 	//C.comp()
 	fmt.Println("アンローリング(4)：", t2, "\n")
 
-	//fmt.Println("-----アンローリング(逐次)-----")
+	//fmt.Println("-----アンローリング(一部並列)-----")
 	initialize()
 
 	p = 4
@@ -372,5 +372,5 @@ func main() {
 	}
 	t2 = time.Now().Sub(t)
 	comp()
-	fmt.Println("アンローリング改(逐次)：", t2, "\n")
+	fmt.Println("アンローリング改(一部並列)：", t2, "\n")
 }
