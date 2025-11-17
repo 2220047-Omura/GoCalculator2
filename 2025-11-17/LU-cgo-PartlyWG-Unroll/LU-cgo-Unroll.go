@@ -12,7 +12,7 @@ package main
 // void printInterval(__mpfi_struct *b);
 // void comp(void);
 //
-// #define N 500
+// #define N 300
 // int acc = 1024;
 // char buf[256];
 //
@@ -121,14 +121,12 @@ package main
 //	   printf("\n");
 //     mpfr_exp_t exp;
 //     for (int i = 0; i < N; i++) {
-//		   if (i<3||i>N-3){
-//            mpfr_get_str(buf, &exp, 10, 15,
-//            &((__mpfi_struct *)&(b[i]))->left, MPFR_RNDD);
-//             printf("[%sx(%d), ", buf, (int)exp);
-//            mpfr_get_str(buf, &exp, 10, 15,
-//            &((__mpfi_struct *)&(b[i]))->right, MPFR_RNDU);
-//            printf("%sx(%d)]\n", buf, (int)exp);
-//        }
+//         mpfr_get_str(buf, &exp, 10, 15,
+//             &((__mpfi_struct *)&(b[i]))->left, MPFR_RNDD);
+//         printf("[%sx(%d), ", buf, (int)exp);
+//         mpfr_get_str(buf, &exp, 10, 15,
+//             &((__mpfi_struct *)&(b[i]))->right, MPFR_RNDU);
+//         printf("%sx(%d)]\n", buf, (int)exp);
 //     }
 //	   printf("\n");
 //
@@ -231,13 +229,23 @@ func call2WG(k int, i int, j int, wg2 *sync.WaitGroup) {
 	C.LUfact2(C.int(k), C.int(i), C.int(j))
 }
 
-func call(k int, i int, N int, wg *sync.WaitGroup) {
+func call3(k int, i int, N int, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	C.LUfact1(C.int(k), C.int(i))
 
 	for j := k + 1; j < N; j++ {
 		call2(k, i, j)
+	}
+}
+
+func call4(k int, i int, N int, wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	C.LUfact1(C.int(k), C.int(i))
+
+	for j := k + 1; j < N; j++ {
+		C.LUfact2(C.int(k), C.int(i), C.int(j))
 	}
 }
 
@@ -259,8 +267,43 @@ func main() {
 		}
 	}
 	t2 := time.Now().Sub(t)
-	C.comp()
+	//C.comp()
 	fmt.Println("逐次：", t2, "\n")
+
+	//fmt.Println("-----逐次(直接呼び出し)-----")
+	C.init()
+
+	t = time.Now()
+	for k := 0; k < N; k++ {
+		for i := k + 1; i < N; i++ {
+			//fmt.Println(k, i)
+			C.LUfact1(C.int(k), C.int(i))
+
+			for j := k + 1; j < N; j++ {
+				C.LUfact2(C.int(k), C.int(i), C.int(j))
+			}
+		}
+	}
+	t2 = time.Now().Sub(t)
+	//C.comp()
+	fmt.Println("逐次(直接呼び出し)：", t2, "\n")
+
+	//fmt.Println("-----アンローリング(逐次)-----")
+	C.init()
+
+	t = time.Now()
+	for k := 0; k < N; k++ {
+		for i := k + 1; i < N; i += 2 {
+			//fmt.Println(k, i)
+			call1(k, i, N)
+			if i+1 != N {
+				call1(k, i+1, N)
+			}
+		}
+	}
+	t2 = time.Now().Sub(t)
+	//C.comp()
+	fmt.Println("アンローリング(逐次)：", t2, "\n")
 
 	//fmt.Println("-----並列-----")
 	C.init()
@@ -278,6 +321,26 @@ func main() {
 	//C.comp()
 	fmt.Println("並列：", t2, "\n")
 
+	//fmt.Println("-----アンローリング(並列)-----")
+	C.init()
+
+	t = time.Now()
+	for k := 0; k < N; k++ {
+		for i := k + 1; i < N; i += 2 {
+			//fmt.Println(k, i)
+			wg.Add(1)
+			go call1WG(k, i, N, &wg)
+			if i+1 != N {
+				wg.Add(1)
+				go call1WG(k, i+1, N, &wg)
+			}
+		}
+		wg.Wait()
+	}
+	t2 = time.Now().Sub(t)
+	//C.comp()
+	fmt.Println("アンローリング(並列)：", t2, "\n")
+
 	//fmt.Println("-----一部並列-----")
 	C.init()
 
@@ -286,7 +349,7 @@ func main() {
 		for i := k + 1; i < N; i++ {
 			//fmt.Println(k, i)
 			wg.Add(1)
-			go call(k, i, N, &wg)
+			go call3(k, i, N, &wg)
 		}
 		wg.Wait()
 	}
@@ -294,4 +357,67 @@ func main() {
 	//C.comp()
 	fmt.Println("一部並列：", t2, "\n")
 
+	//fmt.Println("-----一部並列(直接呼び出し)-----")
+	C.init()
+
+	t = time.Now()
+	for k := 0; k < N; k++ {
+		for i := k + 1; i < N; i++ {
+			//fmt.Println(k, i)
+			wg.Add(1)
+			go call4(k, i, N, &wg)
+		}
+		wg.Wait()
+	}
+	t2 = time.Now().Sub(t)
+	//C.comp()
+	fmt.Println("一部並列(直接呼び出し)：", t2, "\n")
+
+	//fmt.Println("-----アンローリング(一部並列)-----")
+	C.init()
+
+	t = time.Now()
+	for k := 0; k < N; k++ {
+		for i := k + 1; i < N; i += 2 {
+			//fmt.Println(k, i)
+			wg.Add(1)
+			go call3(k, i, N, &wg)
+			if i+1 != N {
+				wg.Add(1)
+				go call3(k, i+1, N, &wg)
+			}
+		}
+		wg.Wait()
+	}
+	t2 = time.Now().Sub(t)
+	//C.comp()
+	fmt.Println("アンローリング(一部並列)：", t2, "\n")
+
+	//fmt.Println("-----アンローリング(4)-----")
+	C.init()
+
+	t = time.Now()
+	for k := 0; k < N; k++ {
+		for i := k + 1; i < N; i += 4 {
+			//fmt.Println(k, i)
+			wg.Add(1)
+			go call3(k, i, N, &wg)
+			if i+1 < N {
+				wg.Add(1)
+				go call3(k, i+1, N, &wg)
+				if i+2 < N {
+					wg.Add(1)
+					go call3(k, i+2, N, &wg)
+					if i+3 < N {
+						wg.Add(1)
+						go call3(k, i+3, N, &wg)
+					}
+				}
+			}
+		}
+		wg.Wait()
+	}
+	t2 = time.Now().Sub(t)
+	//C.comp()
+	fmt.Println("アンローリング(4)：", t2, "\n")
 }

@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"math/big"
-	"math/rand/v2"
 	"sync"
 	"time"
 )
@@ -13,31 +12,31 @@ var A [size][size]big.Float
 var B [size]big.Float
 var calc [size][size]big.Float
 
-const size = 300
+const size = 3
 
 func initialize() {
-	var a, b big.Float
-	//var a, n, i2, j2 big.Float
-	//one := big.NewFloat(1)
+	//var a, b big.Float
+	var a, n, i2, j2 big.Float
+	one := big.NewFloat(1)
 	for i := 0; i < size; i++ {
 		for j := 0; j < size; j++ {
-
-			r := rand.Float64()
-			a.SetFloat64(r)
-			r = rand.Float64()
-			b.SetFloat64(r)
-			A[i][j].SetPrec(1024).Mul(&a, &b)
-
 			/*
-				i2.SetInt64(int64(i))
-				j2.SetInt64(int64(j))
-				n.Add(&i2, &j2)
-				// n.Add(&n, big.NewFloat(1))
-				n.Add(&n, one)
-				// a.SetPrec(1024).Quo(big.NewFloat(1), &n)
-				a.SetPrec(1024).Quo(one, &n)
-				A[i][j].SetPrec(1024).Set(&a)
+				r := rand.Float64()
+				a.SetFloat64(r)
+				r = rand.Float64()
+				b.SetFloat64(r)
+				A[i][j].SetPrec(1024).Mul(&a, &b)
 			*/
+
+			i2.SetInt64(int64(i))
+			j2.SetInt64(int64(j))
+			n.Add(&i2, &j2)
+			// n.Add(&n, big.NewFloat(1))
+			n.Add(&n, one)
+			// a.SetPrec(1024).Quo(big.NewFloat(1), &n)
+			a.SetPrec(1024).Quo(one, &n)
+			A[i][j].SetPrec(1024).Set(&a)
+
 		}
 	}
 
@@ -141,7 +140,7 @@ func main() {
 		}
 	}
 	t2 := time.Now().Sub(t)
-	//comp()
+	comp()
 	fmt.Println("逐次：", t2, "\n")
 
 	//fmt.Println("-----並列-----")

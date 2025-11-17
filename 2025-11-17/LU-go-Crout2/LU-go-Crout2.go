@@ -17,12 +17,12 @@ var B [size]big.Float
 var MUL [size][size]big.Float
 var SUM [size][size]big.Float
 
-const size = 300
+const size = 8
 
 func initialize() {
 
-	//setHilbert()
-	setRand()
+	setHilbert()
+	//setRand()
 	//setSimple()
 
 	one := big.NewFloat(1)
@@ -99,6 +99,36 @@ func Uset(i int, j int) {
 func Lset(j int, i int) {
 	//var MUL, SUM big.Float
 	for k := 0; k < size; k++ {
+		if k != i {
+			MUL[j][i].Mul(&L[j][k], &U[k][i])
+			SUM[j][i].Add(&SUM[j][i], &MUL[j][i])
+			//MUL.Mul(&L[j][k], &U[k][i])
+			//SUM.Add(&SUM, &MUL)
+		}
+	}
+	SUM[j][i].Sub(&A[j][i], &SUM[j][i])
+	L[j][i].Quo(&SUM[j][i], &U[i][i])
+	//SUM.Sub(&A[j][i], &SUM)
+	//L[j][i].Quo(&SUM, &U[i][i])
+}
+
+func Uset2(i int, j int) {
+	//var MUL, SUM big.Float
+	for k := 0; k <= i; k++ {
+		if k != i {
+			MUL[i][j].Mul(&L[i][k], &U[k][j])
+			SUM[i][j].Add(&SUM[i][j], &MUL[i][j])
+			//MUL.Mul(&L[i][k], &U[k][j])
+			//SUM.Add(&SUM, &MUL)
+		}
+	}
+	U[i][j].Sub(&A[i][j], &SUM[i][j])
+	//U[i][j].Sub(&A[i][j], &SUM)
+}
+
+func Lset2(j int, i int) {
+	//var MUL, SUM big.Float
+	for k := 0; k <= i; k++ {
 		if k != i {
 			MUL[j][i].Mul(&L[j][k], &U[k][i])
 			SUM[j][i].Add(&SUM[j][i], &MUL[j][i])
@@ -211,6 +241,23 @@ func main() {
 	//PrintM(&L)
 	//PrintM(&U)
 	//comp()
+
+	//fmt.Println("-----逐次-----")
+	initialize()
+	ts = time.Now()
+	for i := 0; i < size; i++ {
+		for j := i; j < size; j++ {
+			Uset2(i, j)
+		}
+		for j := i + 1; j < size; j++ {
+			Lset2(j, i)
+		}
+	}
+	te = time.Now()
+	fmt.Println("逐次：", te.Sub(ts), "\n")
+	PrintM(&L)
+	PrintM(&U)
+	comp()
 
 	//fmt.Println("-----並列-----")
 	initialize()

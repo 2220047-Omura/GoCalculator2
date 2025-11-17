@@ -10,7 +10,7 @@ import (
 
 var wg sync.WaitGroup
 
-const size = 500
+const size = 3
 
 func SimpleA(A *[size][size]big.Float) {
 	//各要素が左上から1, 2, 3, ... と決められる行列を生成
@@ -371,9 +371,9 @@ func main() {
 	var A, L_NF, U_NF, L_Str, U_Str, Lgo_NF, Ugo_NF, Lgo_Str, Ugo_Str [size][size]big.Float
 
 	//行列Aの作り方を指定
-	//SimpleA(&A)
+	SimpleA(&A)
 	//Random(&A)
-	Hilbert(&A)
+	//Hilbert(&A)
 
 	//PrintM(&A)
 
@@ -410,8 +410,8 @@ func main() {
 	//CalcX(&L1, &U1)
 	//Norm(&A, &L1, &U1)
 
-	//PrintM(&L_NF)
-	//PrintM(&U_NF)
+	PrintM(&L_NF)
+	PrintM(&U_NF)
 
 	t = time.Now()
 	var Lch_NF [size][size]chan big.Float
