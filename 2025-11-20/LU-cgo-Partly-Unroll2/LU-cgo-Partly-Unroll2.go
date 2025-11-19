@@ -487,7 +487,7 @@ func main() {
 			//fmt.Println("あまり")
 			//fmt.Println("(k, i) =", k, i)
 			wg.Add(1)
-			go call3(k, i, N, &wg)
+			call1(k, i, N)
 		}
 		wg.Wait()
 	}
