@@ -1,0 +1,31 @@
+#!/bin/sh
+
+TITLE="[type1-omp]"
+echo ${TITLE}
+
+CC=gcc
+
+TARGET=LU-cgo-PartlyWG-type1-omp
+SRC=${TARGET}.c
+OBJ=${TARGET}.o
+
+set -x 
+
+${CC} \
+ -O3 -g -Wall \
+ -I/usr/local/GMP-6.3.0/include \
+ -I/usr/local/MPFR-4.2.2/include \
+ -I/usr/local/MPFI-1.5.4/include \
+ -c ${SRC} -o ${OBJ} \
+ -fopenmp
+
+
+${CC} \
+ -O3 -g -Wall \
+ -L/usr/local/GMP-6.3.0/lib \
+ -L/usr/local/MPFR-4.2.2/lib \
+ -L/usr/local/MPFI-1.5.4/lib \
+ -Wl,-rpath,/usr/local/MPFI-1.5.4/lib \
+ ${OBJ} -o ${TARGET} \
+ -lmpfi -lmpfr -lgmp \
+ -fopenmp
