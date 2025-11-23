@@ -60,9 +60,18 @@ int init(void) {
     for (int i = 0; i < N; i++) {
         for (int j = 0; j < N; j++) {
 
+	           if (i-j>1)||(j-i>1){
+                mpfi_set_str(hilbert[i][j], "0", 10);
+            }else{
+                double r = ((double)rand())/RAND_MAX;
+	           mpfr_set_d(a, r, MPFR_RNDN);
+	           mpfi_interv_fr(hilbert[i][j], a, a);
+            }
+            /*
 	           double r = ((double)rand())/RAND_MAX;
 	           mpfr_set_d(a, r, MPFR_RNDN);
 	           mpfi_interv_fr(hilbert[i][j], a, a);
+               */
 
 /*
             mpfi_set_str(tmp1, "1", 10);
