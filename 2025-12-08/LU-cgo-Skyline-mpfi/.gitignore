@@ -1,0 +1,4 @@
+go.mod
+*.o
+*.so
+main
