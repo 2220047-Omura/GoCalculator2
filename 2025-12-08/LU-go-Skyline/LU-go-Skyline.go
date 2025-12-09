@@ -8,21 +8,46 @@ import (
 	"time"
 )
 
-var Ask [size2]big.Float
+// var Ask [size2]big.Float
+var Ask []big.Float
 var isk [size]int
-var Lsk [size2]big.Float
-var MULsk [size2]big.Float
-var SUMsk [size2]big.Float
+var Lsk []big.Float
+var MULsk []big.Float
+var SUMsk []big.Float
 
-const size = 5
-const size2 = 10
+const size = 500
+
+var N int
+
+//var N = 10
 
 func initialize() {
-
+	var n int
+	for i := 1; i < size; i++ {
+		n -= 1
+		if n < 0 {
+			n = i
+		}
+		N = N + n + 1
+	}
 	//setSkyline()
-	setSkylineTest()
+	//setSkylineTest()
+	//fmt.Println(N)
+	var zero big.Float
+	zero.SetString("0")
+	for i := 0; i < N; i++ {
+		Ask = append(Ask, zero)
+		Lsk = append(Lsk, zero)
+		MULsk = append(MULsk, zero)
+		SUMsk = append(SUMsk, zero)
+	}
+}
 
-	for i := 0; i < size2; i++ {
+func reset() {
+	//fmt.Println(N)
+	setSkyline()
+	//setSkylineTest()
+	for i := 0; i < N; i++ {
 		Lsk[i].SetString("0")
 		MULsk[i].SetString("0")
 		SUMsk[i].SetString("0")
@@ -30,30 +55,41 @@ func initialize() {
 }
 
 func setSkyline() {
-	var a, b big.Float
-	for i := 0; i < size; i++ {
-		for j := 0; j < size; j++ {
-			r := rand.Float64()
-			a.SetFloat64(r)
-			r = rand.Float64()
-			b.SetFloat64(r)
-			//A[i][j].SetPrec(1024).Mul(&a, &b)
+	var n int
+	isk[0] = 0
+	for i := 1; i < size; i++ {
+		n -= 1
+		if n < 0 {
+			n = i
 		}
+		isk[i] = isk[i-1] + n + 1
 	}
+
+	var a, b big.Float
+	for i := 0; i < N; i++ {
+		r := rand.Float64()
+		a.SetFloat64(r)
+		r = rand.Float64()
+		b.SetFloat64(r)
+		//b.SetPrec(1024).Mul(&a, &b)
+		//Ask = append(Ask, b)
+		Ask[i].SetPrec(1024).Quo(&a, &b)
+	}
+
 }
 
 func setSkylineTest() {
-	var AskTest = [size2]int{2, 1, 3, 0, 4, 7, 8, 2, 3, 5}
-	for i := 0; i < size2; i++ {
+	var AskTest = []int{2, 1, 3, 0, 4, 7, 8, 2, 3, 5}
+	//N = 10
+	for i := 0; i < N; i++ {
 		Ask[i].SetInt64(int64(AskTest[i]))
-		SUMsk[i].SetString("0")
-		MULsk[i].SetString("0")
 	}
 	fmt.Println(AskTest)
 	var iskTest = [size]int{0, 1, 4, 5, 9}
 	for i := 0; i < size; i++ {
 		isk[i] = iskTest[i]
 	}
+	fmt.Println(iskTest)
 }
 
 func Usetsk(a int, i int, j int) {
@@ -74,7 +110,6 @@ func Usetsk(a int, i int, j int) {
 	}
 	Ask[a].Sub(&Ask[a], &SUMsk[a])
 }
-
 func UsetskWG(a int, i int, j int, wg *sync.WaitGroup) {
 	defer wg.Done()
 	var s int
@@ -95,9 +130,9 @@ func UsetskWG(a int, i int, j int, wg *sync.WaitGroup) {
 	Ask[a].Sub(&Ask[a], &SUMsk[a])
 }
 
-func PrintArr(M *[size2]big.Float) {
+func PrintArr(M []big.Float) {
 	//行列をプリント
-	for i := 0; i < size2; i++ {
+	for i := 0; i < N; i++ {
 		fmt.Print(&M[i], " ")
 	}
 	print("\n")
@@ -108,13 +143,14 @@ func main() {
 	var ts, te time.Time
 	var i, j, c int
 	var wg sync.WaitGroup
+	initialize()
 
 	//fmt.Println("-----逐次-----")
-	initialize()
+	reset()
 	ts = time.Now()
-	for a := 1; a < size2; a++ {
+	for a := 1; a < N; a++ {
 		c = 1
-		for b := 1; b < size2; b++ {
+		for b := 1; b < N; b++ {
 			i = c - (isk[c] - b)
 			j = c
 			if i == a {
@@ -128,14 +164,14 @@ func main() {
 	}
 	te = time.Now()
 	fmt.Println("逐次：", te.Sub(ts), "\n")
-	PrintArr(&Ask)
+	//PrintArr(Ask)
 
 	//fmt.Println("-----並列-----")
-	initialize()
+	reset()
 	ts = time.Now()
-	for a := 1; a < size2; a++ {
+	for a := 1; a < N; a++ {
 		c = 1
-		for b := 1; b < size2; b++ {
+		for b := 1; b < N; b++ {
 			i = c - (isk[c] - b)
 			j = c
 			if i == a {
@@ -151,5 +187,5 @@ func main() {
 	}
 	te = time.Now()
 	fmt.Println("並列：", te.Sub(ts), "\n")
-	PrintArr(&Ask)
+	//PrintArr(Ask)
 }
