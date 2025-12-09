@@ -11,7 +11,7 @@
 void printInterval(__mpfi_struct *b);
 //void comp(void);
 
-#define size 300
+#define size 5
 //extern int size;
 extern int n;
 extern int N;

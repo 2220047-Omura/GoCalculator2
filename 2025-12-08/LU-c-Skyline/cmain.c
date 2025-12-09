@@ -59,6 +59,8 @@ int main(void) {
 	t_diff = (ts_stop.tv_sec - ts_start.tv_sec) + (ts_stop.tv_nsec - ts_start.tv_nsec) / 1000000000.0;
 	printf("[%s] single N=%d time=%f\n", title, N, t_diff);
 
+	//printMatrix(*Ask);
+
 #ifdef PRINT
     // printMatrix();
 	//printMatrix3();
@@ -79,6 +81,8 @@ int main(void) {
     clock_gettime(CLOCK_REALTIME, &ts_stop);
 	t_diff = (ts_stop.tv_sec - ts_start.tv_sec) + (ts_stop.tv_nsec - ts_start.tv_nsec) / 1000000000.0;
     printf("[%s] multi N=%d time=%f\n", title, N, t_diff);
+
+	//printMatrix(*Ask);
 
 	allocArrays();
 

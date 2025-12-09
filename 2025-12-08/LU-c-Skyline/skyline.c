@@ -7,7 +7,7 @@
 
 void printInterval(__mpfi_struct *b);
 
-#define size 300
+#define size 5
 //int size;
 //#define ptr(p, i, j) (&(p[(i) * N + (j)]))
 //#define ptr(p, i, j) (&(p[(i) * size + (j)]))
@@ -195,8 +195,8 @@ void setSkylineTest(){
 }
 
 void reset(){
-	setSkyline();
-	//setSkylineTest();
+	//setSkyline();
+	setSkylineTest();
 	for (int i = 0; i < N; i++) {
         mpfi_set_str(Lsk[i], "0", 10);
         mpfi_set_str(SUMsk[i], "0", 10);
