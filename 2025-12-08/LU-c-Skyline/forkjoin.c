@@ -34,20 +34,27 @@ void forkjoin(int i, int N) {
 */
 
 void forkjoin(int a, int N, int c, int isk) {
+	int i;
+	int j;
 #pragma omp parallel
 	{
-#pragma omp for
+#pragma omp single
+    {
 	for (int b = 1; b < N; b++){
-		i = c - (isk - b)
-		j = c
+		i = c - (isk - b);
+		j = c;
 		if (i == a) {
-			//fmt.Println("(i, j)=", i, j)
-			call(b, i, j)
+#pragma omp task firstprivate(b, i, j)
+            {
+                Usetsk(b, i, j);
+            }
 		}
 		if (b == isk) {
-			c += 1
-			isk = getIsk(c)
+			c += 1;
+			isk = getIsk(c);
 		}
 	}
+#pragma omp taskwait
 	}
+    }
 }

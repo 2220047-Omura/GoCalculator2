@@ -9,14 +9,13 @@
 
 #define PRINT
 
-int size0 = 300;
+//int size0 = 300;
 
 // typedef long long GoInt64;
 // typedef GoInt64 GoInt;
 // void forkjoin(GoInt i, GoInt N);
 int main(void) {
-	size = size0;
-	allocArrays(size);
+	//size = size0;
 	//fmt.Println("【スカイライン法】")
     char title[] = "skyline";
 #ifdef PRINT
@@ -33,22 +32,25 @@ int main(void) {
 	init();
 	int N = getN();
 	int isk;
+	int i;
+	int j;
+	int c;
 	
 	reset();
 	clock_gettime(CLOCK_REALTIME, &ts_start);
 	for (int a = 1; a < N; a++) {
-		c = 1
-		isk = getIsk(c)
+		c = 1;
+		isk = getIsk(c);
 		for (int b = 1; b < N; b++){
-			i = c - (isk - b)
-			j = c
+			i = c - (isk - b);
+			j = c;
 			if (i == a) {
 				//fmt.Println("(i, j)=", i, j)
-				call(b, i, j)
+				Usetsk(b, i, j);
 			}
 			if (b == isk) {
-				c += 1
-				isk = getIsk(c)
+				c += 1;
+				isk = getIsk(c);
 			}
 		}
 	}
@@ -59,7 +61,7 @@ int main(void) {
 
 #ifdef PRINT
     // printMatrix();
-	printMatrix3();
+	//printMatrix3();
 #endif
 
 #ifdef PRINT
@@ -70,17 +72,19 @@ int main(void) {
 
 	clock_gettime(CLOCK_REALTIME, &ts_start);
 	for (int a = 1; a < N; a++) {
-		c = 1
-		isk = getIsk(c)
+		c = 1;
+		isk = getIsk(c);
 		forkjoin(a, N,c,isk);
 	}
     clock_gettime(CLOCK_REALTIME, &ts_stop);
 	t_diff = (ts_stop.tv_sec - ts_start.tv_sec) + (ts_stop.tv_nsec - ts_start.tv_nsec) / 1000000000.0;
     printf("[%s] multi N=%d time=%f\n", title, N, t_diff);
 
+	allocArrays();
+
 #ifdef PRINT
     // printMatrix();
-	printMatrix3();
+	//printMatrix3();
 #endif // PRINT
 
 	return 0;

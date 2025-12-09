@@ -34,12 +34,12 @@ extern __mpfi_struct *MUL;
 #endif // MDIMARRAY
 */
 
-mpfi_t *Ask;
-int isk[size];
-mpfi_t *Lsk;
+extern mpfi_t *Ask;
+extern int isk[size];
+extern mpfi_t *Lsk;
 
-mpfi_t *SUMsk;
-mpfi_t *MULsk;
+extern mpfi_t *SUMsk;
+extern mpfi_t *MULsk;
 
 extern mpfi_t tmp1;
 extern mpfi_t tmp2;
