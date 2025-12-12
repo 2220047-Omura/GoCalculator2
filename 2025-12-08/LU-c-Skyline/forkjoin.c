@@ -33,14 +33,14 @@ void forkjoin(int i, int N) {
 }
 */
 
-void forkjoin(int a, int N, int c, int isk) {
+void forkjoin(int a, int E, int c, int isk) {
 	int i;
 	int j;
 #pragma omp parallel
 	{
 #pragma omp single
     {
-	for (int b = 1; b < N; b++){
+	for (int b = 1; b < E; b++){
 		i = c - (isk - b);
 		j = c;
 		if (i == a) {

@@ -30,7 +30,7 @@ int main(void) {
 #endif // PRINT
 	srand(0);
 	init();
-	int N = getN();
+	int E = getN();
 	int isk;
 	int i;
 	int j;
@@ -38,10 +38,10 @@ int main(void) {
 	
 	reset();
 	clock_gettime(CLOCK_REALTIME, &ts_start);
-	for (int a = 1; a < N; a++) {
+	for (int a = 1; a < E; a++) {
 		c = 1;
 		isk = getIsk(c);
-		for (int b = 1; b < N; b++){
+		for (int b = 1; b < E; b++){
 			i = c - (isk - b);
 			j = c;
 			if (i == a) {
@@ -57,7 +57,7 @@ int main(void) {
 	
 	clock_gettime(CLOCK_REALTIME, &ts_stop);
 	t_diff = (ts_stop.tv_sec - ts_start.tv_sec) + (ts_stop.tv_nsec - ts_start.tv_nsec) / 1000000000.0;
-	printf("[%s] single N=%d time=%f\n", title, N, t_diff);
+	printf("[%s] single size=%d time=%f\n", title, size, t_diff);
 
 	//printMatrix(*Ask);
 
@@ -73,14 +73,14 @@ int main(void) {
 	reset();
 
 	clock_gettime(CLOCK_REALTIME, &ts_start);
-	for (int a = 1; a < N; a++) {
+	for (int a = 1; a < E; a++) {
 		c = 1;
 		isk = getIsk(c);
-		forkjoin(a, N,c,isk);
+		forkjoin(a, E,c,isk);
 	}
     clock_gettime(CLOCK_REALTIME, &ts_stop);
 	t_diff = (ts_stop.tv_sec - ts_start.tv_sec) + (ts_stop.tv_nsec - ts_start.tv_nsec) / 1000000000.0;
-    printf("[%s] multi N=%d time=%f\n", title, N, t_diff);
+    printf("[%s] multi size=%d time=%f\n", title, size, t_diff);
 
 	//printMatrix(*Ask);
 

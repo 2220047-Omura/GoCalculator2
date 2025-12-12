@@ -11,10 +11,10 @@
 void printInterval(__mpfi_struct *b);
 //void comp(void);
 
-#define size 5
+#define size 10
 //extern int size;
 extern int n;
-extern int N;
+extern int E;
 //#define ptr(p, i, j) (&(p[(i) * size + (j)]))
 // extern int acc = 1024;
 extern int acc;

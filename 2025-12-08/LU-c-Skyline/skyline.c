@@ -5,14 +5,16 @@
 #include <mpfi_io.h>
 //#include <mpfr.h>
 
+#include "skyline.h"
+
 void printInterval(__mpfi_struct *b);
 
-#define size 5
+//#define size 500
 //int size;
 //#define ptr(p, i, j) (&(p[(i) * N + (j)]))
 //#define ptr(p, i, j) (&(p[(i) * size + (j)]))
 int n;
-int N;
+int E; // Number of Elements
 int acc = 1024;
 char buf[256];
 /*
@@ -45,7 +47,7 @@ mpfi_t tmp2;
 //mpfi_t tmp;
 
 int getN(void){
-    return N;
+    return E;
 }
 
 int getIsk(int c){
@@ -53,7 +55,7 @@ int getIsk(int c){
 }
 
 void printMatrix(__mpfi_struct *array) {
-    for (int i = 0; i < N; i++) {
+    for (int i = 0; i < E; i++) {
         printInterval(&array[i]);
     }
 }
@@ -68,7 +70,7 @@ int init(void) {
         if (n < 0) {
             n = i;
         }
-        N = N + n + 1;
+        E = E + n + 1;
     }
 
     srand(0);
@@ -94,11 +96,11 @@ int init(void) {
         }
     }
     */
-    Ask = (mpfi_t *)malloc(N * sizeof(mpfi_t));
-    Lsk = (mpfi_t *)malloc(N * sizeof(mpfi_t));
-    SUMsk = (mpfi_t *)malloc(N * sizeof(mpfi_t));
-    MULsk = (mpfi_t *)malloc(N * sizeof(mpfi_t));
-    for (int i = 0; i < N; i++) {  
+    Ask = (mpfi_t *)malloc(E * sizeof(mpfi_t));
+    Lsk = (mpfi_t *)malloc(E * sizeof(mpfi_t));
+    SUMsk = (mpfi_t *)malloc(E * sizeof(mpfi_t));
+    MULsk = (mpfi_t *)malloc(E * sizeof(mpfi_t));
+    for (int i = 0; i < E; i++) {  
         mpfi_init2(Ask[i], acc);
         mpfi_init2(Lsk[i], acc);
         mpfi_init2(SUMsk[i], acc);
@@ -166,7 +168,7 @@ void setSkyline(){
 		}
 		isk[i] = isk[i-1] + n + 1;
 	}
-    for (int i = 0; i < N; i ++){
+    for (int i = 0; i < E; i ++){
         double r = ((double)rand())/RAND_MAX;
 	    mpfr_set_d(a, r, MPFR_RNDN);
         mpfi_interv_fr(Ask[i], a, a);
@@ -195,9 +197,9 @@ void setSkylineTest(){
 }
 
 void reset(){
-	//setSkyline();
-	setSkylineTest();
-	for (int i = 0; i < N; i++) {
+	setSkyline();
+	//setSkylineTest();
+	for (int i = 0; i < E; i++) {
         mpfi_set_str(Lsk[i], "0", 10);
         mpfi_set_str(SUMsk[i], "0", 10);
         mpfi_set_str(MULsk[i], "0", 10);
@@ -243,6 +245,7 @@ void Uset(int i,int j){
 */
 
 void Usetsk(int b,int i,int j) {
+    //printf("Hello from (%d)\n",j);
     int s;
     if (isk[j]-isk[j-1]-(j-i)-1 < isk[i]-isk[i-1]-1) {
 		s = isk[j] - isk[j-1] - (j - i) - 1;
