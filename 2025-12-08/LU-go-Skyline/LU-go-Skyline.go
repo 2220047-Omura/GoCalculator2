@@ -8,7 +8,6 @@ import (
 	"time"
 )
 
-// var Ask [size2]big.Float
 var Ask []big.Float
 var isk [size]int
 var Lsk []big.Float
@@ -17,7 +16,7 @@ var SUMsk []big.Float
 
 const size = 500
 
-var N int
+var E int
 
 //var N = 10
 
@@ -28,14 +27,11 @@ func initialize() {
 		if n < 0 {
 			n = i
 		}
-		N = N + n + 1
+		E = E + n + 1
 	}
-	//setSkyline()
-	//setSkylineTest()
-	//fmt.Println(N)
 	var zero big.Float
 	zero.SetString("0")
-	for i := 0; i < N; i++ {
+	for i := 0; i < E; i++ {
 		Ask = append(Ask, zero)
 		Lsk = append(Lsk, zero)
 		MULsk = append(MULsk, zero)
@@ -47,7 +43,7 @@ func reset() {
 	//fmt.Println(N)
 	setSkyline()
 	//setSkylineTest()
-	for i := 0; i < N; i++ {
+	for i := 0; i < E; i++ {
 		Lsk[i].SetString("0")
 		MULsk[i].SetString("0")
 		SUMsk[i].SetString("0")
@@ -66,13 +62,11 @@ func setSkyline() {
 	}
 
 	var a, b big.Float
-	for i := 0; i < N; i++ {
+	for i := 0; i < E; i++ {
 		r := rand.Float64()
 		a.SetFloat64(r)
 		r = rand.Float64()
 		b.SetFloat64(r)
-		//b.SetPrec(1024).Mul(&a, &b)
-		//Ask = append(Ask, b)
 		Ask[i].SetPrec(1024).Quo(&a, &b)
 	}
 
@@ -81,7 +75,7 @@ func setSkyline() {
 func setSkylineTest() {
 	var AskTest = []int{2, 1, 3, 0, 4, 7, 8, 2, 3, 5}
 	//N = 10
-	for i := 0; i < N; i++ {
+	for i := 0; i < E; i++ {
 		Ask[i].SetInt64(int64(AskTest[i]))
 	}
 	fmt.Println(AskTest)
@@ -92,7 +86,7 @@ func setSkylineTest() {
 	fmt.Println(iskTest)
 }
 
-func Usetsk(a int, i int, j int) {
+func Usetsk(b int, i int, j int) {
 	var s int
 	if isk[j]-isk[j-1]-(j-i)-1 < isk[i]-isk[i-1]-1 {
 		s = isk[j] - isk[j-1] - (j - i) - 1
@@ -104,13 +98,14 @@ func Usetsk(a int, i int, j int) {
 	for k := 0; k < s; k++ {
 		//fmt.Println("Lki*Ukj: ", isk[i]-(s-k), isk[j]-(j-i)-(s-k))
 		//fmt.Println("i,Lki,Uii: ", i-(s-k), &Ask[isk[i]-(s-k)], &Ask[isk[i-(s-k)]])
-		Lsk[a].Quo(&Ask[isk[i]-(s-k)], &Ask[isk[i-(s-k)]])
-		MULsk[a].Mul(&Lsk[a], &Ask[isk[j]-(j-i)-(s-k)])
-		SUMsk[a].Add(&SUMsk[a], &MULsk[a])
+		Lsk[b].Quo(&Ask[isk[i]-(s-k)], &Ask[isk[i-(s-k)]])
+		MULsk[b].Mul(&Lsk[b], &Ask[isk[j]-(j-i)-(s-k)])
+		SUMsk[b].Add(&SUMsk[b], &MULsk[b])
 	}
-	Ask[a].Sub(&Ask[a], &SUMsk[a])
+	Ask[b].Sub(&Ask[b], &SUMsk[b])
 }
-func UsetskWG(a int, i int, j int, wg *sync.WaitGroup) {
+
+func UsetskWG(b int, i int, j int, wg *sync.WaitGroup) {
 	defer wg.Done()
 	var s int
 	if isk[j]-isk[j-1]-(j-i)-1 < isk[i]-isk[i-1]-1 {
@@ -123,16 +118,16 @@ func UsetskWG(a int, i int, j int, wg *sync.WaitGroup) {
 	for k := 0; k < s; k++ {
 		//fmt.Println("Lki*Ukj: ", isk[i]-(s-k), isk[j]-(j-i)-(s-k))
 		//fmt.Println("i,Lki,Uii: ", i-(s-k), &Ask[isk[i]-(s-k)], &Ask[isk[i-(s-k)]])
-		Lsk[a].Quo(&Ask[isk[i]-(s-k)], &Ask[isk[i-(s-k)]])
-		MULsk[a].Mul(&Lsk[a], &Ask[isk[j]-(j-i)-(s-k)])
-		SUMsk[a].Add(&SUMsk[a], &MULsk[a])
+		Lsk[b].Quo(&Ask[isk[i]-(s-k)], &Ask[isk[i-(s-k)]])
+		MULsk[b].Mul(&Lsk[b], &Ask[isk[j]-(j-i)-(s-k)])
+		SUMsk[b].Add(&SUMsk[b], &MULsk[b])
 	}
-	Ask[a].Sub(&Ask[a], &SUMsk[a])
+	Ask[b].Sub(&Ask[b], &SUMsk[b])
 }
 
 func PrintArr(M []big.Float) {
 	//行列をプリント
-	for i := 0; i < N; i++ {
+	for i := 0; i < E; i++ {
 		fmt.Print(&M[i], " ")
 	}
 	print("\n")
@@ -148,9 +143,9 @@ func main() {
 	//fmt.Println("-----逐次-----")
 	reset()
 	ts = time.Now()
-	for a := 1; a < N; a++ {
+	for a := 1; a < E; a++ {
 		c = 1
-		for b := 1; b < N; b++ {
+		for b := 1; b < E; b++ {
 			i = c - (isk[c] - b)
 			j = c
 			if i == a {
@@ -169,9 +164,9 @@ func main() {
 	//fmt.Println("-----並列-----")
 	reset()
 	ts = time.Now()
-	for a := 1; a < N; a++ {
+	for a := 1; a < E; a++ {
 		c = 1
-		for b := 1; b < N; b++ {
+		for b := 1; b < E; b++ {
 			i = c - (isk[c] - b)
 			j = c
 			if i == a {

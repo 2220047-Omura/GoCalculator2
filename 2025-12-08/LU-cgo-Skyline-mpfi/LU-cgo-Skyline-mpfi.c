@@ -5,12 +5,14 @@
 #include <mpfi_io.h>
 //#include <mpfr.h>
 
+#include "SkMpfi.h"
+
 void printInterval(__mpfi_struct *b);
 //void comp(void);
 
-#define size 500
+//#define size 500
 int n;
-int N;
+int E;
 int acc = 1024;
 char buf[256];
 
@@ -26,7 +28,7 @@ mpfi_t tmp2;
 //mpfi_t tmp;
 
 int getN(void){
-    return N;
+    return E;
 }
 
 int getIsk(int c){
@@ -54,17 +56,17 @@ int init(void) {
         if (n < 0) {
             n = i;
         }
-        N = N + n + 1;
+        E = E + n + 1;
     }
     //printf("N:%d\n",N);
 
     // allocate
-    Ask = (mpfi_t *)malloc(N * sizeof(mpfi_t));
-    Lsk = (mpfi_t *)malloc(N * sizeof(mpfi_t));
-    SUMsk = (mpfi_t *)malloc(N * sizeof(mpfi_t));
-    MULsk = (mpfi_t *)malloc(N * sizeof(mpfi_t));
+    Ask = (mpfi_t *)malloc(E * sizeof(mpfi_t));
+    Lsk = (mpfi_t *)malloc(E * sizeof(mpfi_t));
+    SUMsk = (mpfi_t *)malloc(E * sizeof(mpfi_t));
+    MULsk = (mpfi_t *)malloc(E * sizeof(mpfi_t));
     
-    for (int i = 0; i < N; i++) {
+    for (int i = 0; i < E; i++) {
         mpfi_init2(Ask[i], acc);
         mpfi_init2(Lsk[i], acc);
         mpfi_init2(SUMsk[i], acc);
@@ -91,7 +93,7 @@ void setSkyline(){
 		}
 		isk[i] = isk[i-1] + n + 1;
 	}
-    for (int i = 0; i < N; i ++){
+    for (int i = 0; i < E; i ++){
         double r = ((double)rand())/RAND_MAX;
 	    mpfr_set_d(a, r, MPFR_RNDN);
 	    mpfi_interv_fr(Ask[i], a, a);
@@ -113,9 +115,10 @@ void setSkylineTest(){
 }
 
 void reset(){
+    srand(0);
 	setSkyline();
 	//setSkylineTest();
-	for (int i = 0; i < N; i++) {
+	for (int i = 0; i < E; i++) {
         mpfi_set_str(Lsk[i], "0", 10);
         mpfi_set_str(SUMsk[i], "0", 10);
         mpfi_set_str(MULsk[i], "0", 10);
@@ -152,7 +155,7 @@ void printInterval(__mpfi_struct *b) {
 }
 
 void result(){
-    for (int i = N-3; i < N; i++) {
+    for (int i = E-3; i < E; i++) {
         printInterval((__mpfi_struct *)&(Ask[i]));
     }
 }
