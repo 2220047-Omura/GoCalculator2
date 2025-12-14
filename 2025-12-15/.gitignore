@@ -1,0 +1,6 @@
+go.mod
+*.so
+*.o
+main
+cmain
+
