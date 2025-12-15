@@ -9,50 +9,46 @@ import (
 )
 
 var wg sync.WaitGroup
-var A [size][size]big.Float
-var B [size]big.Float
-var calc [size][size]big.Float
+var A [size][size]float64
+var B [size]float64
+
+var calc [size][size]float64
 
 const size = 300
 
 func initialize() {
-	var pcg = rand.NewPCG(0, 0)
+    var pcg = rand.NewPCG(0, 0)
 	var rng = rand.New(pcg)
 
 	//setHilbert()
 	setRand(rng)
 	//setSkyline(rng)
-	//setSimple()
 	mulDiagonal()
 	//setSperse()
 
-	B[0].SetPrec(1024).SetString("1")
-	for i := 1; i < size; i++ {
-		B[i].SetPrec(1024).SetString("0")
+	for i := 0; i < size; i ++{
+		B[i] = 0
+		for j := 0; j < size; j ++{
+			calc[i][j]=0
+		}
 	}
+	B[0] = 1
 }
 
 func setSperse() {
 	for i := 0; i < size; i++ {
 		for j := 0; j < size; j++ {
 			if i-j > 1 || j-i > 1 {
-				A[i][j].SetString("0")
+				A[i][j] = 0
 			}
 		}
 	}
 }
 
 func setHilbert() {
-	var a, n, i2, j2 big.Float
-	one := big.NewFloat(1)
 	for i := 0; i < size; i++ {
 		for j := 0; j < size; j++ {
-			i2.SetInt64(int64(i))
-			j2.SetInt64(int64(j))
-			n.Add(&i2, &j2)
-			n.Add(&n, one)
-			a.SetPrec(1024).Quo(one, &n)
-			A[i][j].SetPrec(1024).Set(&a)
+			A[i][j] = float64(1 / (i + j + 1))
 		}
 	}
 }
@@ -60,8 +56,7 @@ func setHilbert() {
 func setRand(rng *rand.Rand) {
 	for i := 0; i < size; i++ {
 		for j := 0; j < size; j++ {
-			r := rng.Float64()
-			A[i][j].SetPrec(1024).SetFloat64(r)
+			A[i][j] = rng.Float64()
 		}
 	}
 }
@@ -69,56 +64,34 @@ func setRand(rng *rand.Rand) {
 func setSkyline(rng *rand.Rand){
 	var c int
     for i := 0; i < size; i++ {
-        r := rand.Float64()
-		A[i][i].SetPrec(1024).SetFloat64(r)
+        A[i][i] = rng.Float64()
         if (i-c<0){
             c = 0;
         }
         for j := i-1; j >= c; j-- {
-	        r := rng.Float64()
-		    A[i][j].SetPrec(1024).SetFloat64(r)
-			A[j][i].SetPrec(1024).SetFloat64(r)
+	        A[i][j] = rng.Float64()
+			A[j][i] = rng.Float64()
         }
         c += 2;
     }
 }
 
-
-func setSimple() {
-	var n big.Float
-	for i := 0; i < size; i++ {
-		for j := 0; j < size; j++ {
-			n.Add(&n, big.NewFloat(1))
-			A[i][j].SetPrec(1024).Set(&n)
-		}
-	}
-}
-
 func mulDiagonal() {
-	var hdr, one, toI, toJ, div big.Float
-	hdr.SetString("100")
-	one.SetString("1")
 	for i := 0; i < size; i++ {
-		A[i][i].Mul(&A[i][i], &hdr)
-		toI.SetInt64(int64(i))
+		A[i][i] *= 100
 		for j := i + 1; j < size; j++ {
-			toJ.SetInt64(int64(j))
-			div.Sub(&toJ, &toI)
-			div.Add(&div, &one)
-			div.Quo(&hdr, &div)
-			A[i][j].Mul(&A[i][j], &div)
-			A[j][i].Mul(&A[j][i], &div)
+			A[i][j] *= float64(100/(j-i+1))
 		}
 	}
 }
 
 func LUfact1(k int, i int) {
-	A[i][k].SetPrec(1024).Quo(&A[i][k], &A[k][k])
+	A[i][k] = A[i][k]/A[k][k]
 }
 
 func LUfact2(k int, i int, j int) {
-	calc[i][j].SetPrec(1024).Mul(&A[i][k], &A[k][j])
-	A[i][j].SetPrec(1024).Sub(&A[i][j], &calc[i][j])
+	calc[i][j] = A[i][k] * A[k][j]
+	A[i][j] -= calc[i][j]
 }
 
 func call1(k int, i int, N int) {
@@ -146,29 +119,27 @@ func call3(k int, i int, N int, wg *sync.WaitGroup) {
 }
 
 func comp() {
-	var tmp, p big.Float
-	tmp.SetPrec(1024)
+	var tmp float64
 
 	// forward substitution
 	for i := 1; i < size; i++ {
 		for j := 0; j <= i-1; j++ {
-			tmp.Mul(&B[j], &A[i][j])
-			B[i].Sub(&B[i], &tmp)
+			tmp = B[j]*A[i][j]
+			B[i] -= tmp
 		}
 	}
 
 	// backward substitution
 	for i := size - 1; i >= 0; i-- {
 		for j := size - 1; j > i; j-- {
-			tmp.Mul(&B[j], &A[i][j])
-			B[i].Sub(&B[i], &tmp)
+			tmp = B[j]*A[i][j]
+			B[i] -= tmp
 		}
-		B[i].Quo(&B[i], &A[i][i])
+		B[i] = B[i]/A[i][i]
 	}
 
 	for i := 0; i < size; i++ {
-		p.SetPrec(100).Set(&B[i])
-		fmt.Println(&p)
+		fmt.Println(B[i])
 	}
 }
 

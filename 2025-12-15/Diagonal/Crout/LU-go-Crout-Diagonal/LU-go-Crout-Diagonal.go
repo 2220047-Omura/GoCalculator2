@@ -18,10 +18,12 @@ var SUM [size][size]big.Float
 const size = 300
 
 func initialize() {
+	var pcg = rand.NewPCG(0, 0)
+	var rng = rand.New(pcg)
 
 	//setHilbert()
-	setRand()
-	//setSkyline()
+	setRand(rng)
+	//setSkyline(rng)
 	//setSimple()
 	mulDiagonal()
 	//setSperse()
@@ -64,39 +66,31 @@ func setHilbert() {
 	}
 }
 
-func setRand() {
-	var a, b big.Float
+func setRand(rng *rand.Rand) {
 	for i := 0; i < size; i++ {
 		for j := 0; j < size; j++ {
-			r := rand.Float64()
-			a.SetFloat64(r)
-			r = rand.Float64()
-			b.SetFloat64(r)
-			A[i][j].SetPrec(1024).Mul(&a, &b)
+			r := rng.Float64()
+			A[i][j].SetPrec(1024).SetFloat64(r)
 		}
 	}
 }
 
-func setSkyline(){
+func setSkyline(rng *rand.Rand) {
 	var c int
-    var a big.Float
-    for i := 0; i < size; i++ {
-        r := rand.Float64()
-		a.SetFloat64(r)
-		A[i][i].SetPrec(1024).Set(&a)
-        if (i-c<0){
-            c = 0;
-        }
-        for j := i-1; j >= c; j-- {
-	        r := rand.Float64()
-		    a.SetFloat64(r)
-		    A[i][j].SetPrec(1024).Set(&a)
-			A[j][i].SetPrec(1024).Set(&a)
-        }
-        c += 2;
-    }
+	for i := 0; i < size; i++ {
+		r := rng.Float64()
+		A[i][i].SetPrec(1024).SetFloat64(r)
+		if i-c < 0 {
+			c = 0
+		}
+		for j := i - 1; j >= c; j-- {
+			r := rng.Float64()
+			A[i][j].SetPrec(1024).SetFloat64(r)
+			A[j][i].SetPrec(1024).SetFloat64(r)
+		}
+		c += 2
+	}
 }
-
 
 func setSimple() {
 	var n big.Float
