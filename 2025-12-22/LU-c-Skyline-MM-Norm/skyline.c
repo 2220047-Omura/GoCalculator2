@@ -15,11 +15,11 @@ char buf[256];
 
 static const char *mm_filename = NULL;
 
-int size = 0;    // ← 実行時に決まる
-int *Dia = NULL;
-int *isk = NULL;
-int *jsk = NULL;
-int *prof = NULL;
+int size = 0;    // ← 実行時に決まる 正方行列の一辺の大きさ
+int *Dia = NULL; //Diagonal. Dia[n]に行(列)番号nの対角要素がAskのどこにあるのかを格納
+int *isk = NULL; //isk[n]にnの行番号を格納
+int *jsk = NULL; //isk[n]にnの列番号を格納
+int *prof = NULL; //profile. prof[n]にnの上に非ゼロ要素が何個あるかを格納
 
 mpfi_t *Ask;
 //int isk[size];
@@ -256,6 +256,7 @@ void reset(){
         mpfi_set_str(Xsk[i], "0",10);
     }
     mpfi_set_str(Bsk[0], "1",10);
+    mpfi_set_str(Xsk[0], "1",10);
 }
 
 void Usetsk(int m,int l) {
@@ -264,11 +265,13 @@ void Usetsk(int m,int l) {
     if (prof[m] < prof[l]) {
 		s = prof[m];
 	} else {
-		s = l;
+		s = prof[l];
 	}
 
+    //printf("s = %d\n",s);
     for (int k = 0; k < s; k++) {
-        mpfi_div(Lsk[m],Ask[l-(s-k)],Ask[l]);
+        //printf("l-(s-k)/isk[l-(s-k)] = %d/%d\n",l-(s-k),Dia[isk[l-(s-k)]]);
+        mpfi_div(Lsk[m],Ask[l-(s-k)],Ask[Dia[isk[l-(s-k)]]]);
         mpfi_mul(MULsk[m],Lsk[m],Ask[m-(s-k)]);
         mpfi_add(SUMsk[m],SUMsk[m],MULsk[m]);
     }
@@ -276,12 +279,6 @@ void Usetsk(int m,int l) {
 }
 
 void printInterval(__mpfi_struct *b) {
-/*
-	   for (int i = 0;i < N;i++){
-	       mpfi_printf("%.128RNf\n",b[i]);
-	   }
-*/
-
     char buf[256];
     mpfr_exp_t exp;
     mpfr_get_str(buf, &exp, 10, 15,
@@ -291,6 +288,19 @@ void printInterval(__mpfi_struct *b) {
     mpfr_get_str(buf, &exp, 10, 15,
         &(b->right), MPFR_RNDU);
     printf("%sx(%d)]\n", buf, (int)exp);
+
+}
+
+void printInterval2(__mpfi_struct *b) {
+    char buf[256];
+    mpfr_exp_t exp;
+    mpfr_get_str(buf, &exp, 10, 15,
+        // &((__mpfi_struct *)&(b))->left, MPFR_RNDD);
+        &(b->left), MPFR_RNDD);
+    printf("[%sx(%d), ", buf, (int)exp);
+    mpfr_get_str(buf, &exp, 10, 15,
+        &(b->right), MPFR_RNDU);
+    printf("%sx(%d)] ", buf, (int)exp);
 
 }
 
@@ -306,7 +316,7 @@ void allocArrays() {
 }
 
 void printMatrix3() {
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < E; i++) {
         printInterval((__mpfi_struct *)&(Ask[i]));
     }
 }
@@ -317,52 +327,63 @@ void Norm(){
     mpfi_set_str(tmp, "0", 10);
 
     // forward substitution
+    int l;
     for (int a = 1; a < E; a++) {
-        mpfi_div(Lsk[a], Ask[a], Ask[jsk[a]]);
-        mpfi_mul(tmp, Bsk[isk[a]], Lsk[a]);
-        mpfi_sub(Xsk[jsk[a]], Bsk[jsk[a]], tmp);
+        if (isk[a] != jsk[a]) {
+            printf("a = %d ",a);
+            //printf("Ask[%d] / Ask[%d] \n",Ask[n],Ask[Dia[isk[n]]]);
+            //printInterval((__mpfi_struct *)&(Ask[n]));
+            //printInterval((__mpfi_struct *)&(Ask[Dia[isk[n]]]));
+            mpfi_div(tmp, Ask[a], Ask[Dia[isk[a]]]);
+            printInterval((__mpfi_struct *)&(tmp));
+            mpfi_mul(tmp, Xsk[isk[a]], tmp);
+            //mpfi_sub(Xsk[jsk[a]], Bsk[jsk[a]], tmp);
+            mpfi_sub(Xsk[jsk[a]], Xsk[jsk[a]], tmp);
+            //printf("\n");
+        }
     }
     
     // backward substitution
-    int l;
     for (int a = size-1; a >= 0; a--) {
         l = Dia[a];
         for (int m = E-1; m >= l; m--) {
 		    if (isk[m] == a) {
-			    mpfi_mul(tmp,Bsk[jsk[m]],Ask[m]);
-                mpfi_sub(Xsk[isk[m]],Bsk[isk[m]],tmp);
+			    mpfi_mul(tmp,Xsk[jsk[m]],Ask[m]);
+                //mpfi_sub(Xsk[isk[m]],Bsk[isk[m]],tmp);
+                mpfi_sub(Xsk[isk[m]],Xsk[isk[m]],tmp);
 		    }
         }
+        //mpfi_div(Xsk[a],Xsk[a],Ask[l]);
         mpfi_div(Xsk[a],Xsk[a],Ask[l]);
 	}
 
     for (int i = 0; i < size; i++){
-        //printInterval((__mpfi_struct *)&(Xsk[i]));
+        printInterval((__mpfi_struct *)&(Xsk[i]));
     }
     for (int i = 0; i < E; i++){
         //printf("%d\n",prof[i]);
-        //printInterval((__mpfi_struct *)&(Ask2[i]));
+        //printInterval((__mpfi_struct *)&(Ask[i]));
     }
    
     //Ax
     for (int a = 0; a < size; a++) {
         if (isk[a] == 0) {
             //j = m - Dia[a-1] - 1;
-            mpfi_mul(MULsk[a], Xsk[a], Ask2[a]);
-            mpfi_add(Xsk[0], Xsk[0], MULsk[a]);
+            mpfi_mul(tmp, Xsk[a], Ask2[a]);
+            mpfi_add(Xsk[0], Xsk[0], tmp);
 		}
     }
     for (int a = 1; a < size; a++) {
         l = Dia[a];
         for (int n = Dia[a-1] + 1; n < l; n++) {
-            mpfi_div(Lsk[n], Ask2[n], Ask2[Dia[isk[n]]]);
-            mpfi_mul(MULsk[n], Xsk[isk[n]], Lsk[n]);
-            mpfi_add(Xsk[a], Xsk[a], MULsk[n]);
+            mpfi_div(tmp, Ask2[n], Ask2[Dia[isk[n]]]);
+            mpfi_mul(tmp, Xsk[isk[n]], tmp);
+            mpfi_add(Xsk[a], Xsk[a], tmp);
         }
         for (int m = l; m < E; m++){
 		    if (isk[m] == a) {
-                mpfi_mul(MULsk[m], Xsk[jsk[m]], Ask2[m]);
-                mpfi_add(Xsk[a], Xsk[a], MULsk[m]);
+                mpfi_mul(tmp, Xsk[jsk[m]], Ask2[m]);
+                mpfi_add(Xsk[a], Xsk[a], tmp);
 		    }
         }
 	}
@@ -380,4 +401,45 @@ void Norm(){
     printf("norm = ");
     printInterval((__mpfi_struct *)&(norm));
     
+}
+
+void printSquare() {
+    int N = 3; //表示するサイズの大きさ
+    int j, predj;
+    mpfi_t zero,l;
+    mpfi_init2(zero,acc);
+    mpfi_init2(l,acc);
+    mpfi_set_str(zero, "0", 10);
+    mpfi_set_str(l, "0", 10);
+
+    int p = 0; //1行に表示するL要素の個数
+    for (int a = size - N; a < size; a++) { //aの値が行列Aの何行目について処理するか示す
+        printf("| ");
+
+        //L要素の表示
+        for (int n = 0; n < p - prof[Dia[a]]; n++) {
+            printInterval2((__mpfi_struct *)&(zero));
+        }
+        int m = p - prof[Dia[a]];
+        if (m<0) { m=0;}
+        for (int n = m; n < p; n++) {
+            mpfi_div(l, Ask[Dia[a]-(p-n)], Ask[Dia[isk[Dia[a]-(p-n)]]]);
+            printInterval2((__mpfi_struct *)&(l));
+        }
+        p += 1;
+
+        //U要素の表示
+        predj = jsk[Dia[a]];
+        for (int n = Dia[a]; n < E; n ++) {
+            if (isk[n] == a) {
+                j = jsk[n];
+                for (int m = 0; m < j-predj; m++) {
+                    printInterval2((__mpfi_struct *)&(zero));
+                }
+                printInterval2((__mpfi_struct *)&(Ask[n]));
+                predj = j+1;
+            }
+        }
+        printf(" |\n");
+    }
 }

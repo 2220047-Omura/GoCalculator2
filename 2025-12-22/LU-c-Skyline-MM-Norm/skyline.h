@@ -86,10 +86,14 @@ void Usetsk(int i,int j);
 
 void printInterval(__mpfi_struct *b);
 
+void printInterval2(__mpfi_struct *b);
+
 void printMatrix3(void);
 
 void allocArrays(void);
 
 void Norm(void);
+
+void printSquare(void);
 
 #endif // _SKYLINE_

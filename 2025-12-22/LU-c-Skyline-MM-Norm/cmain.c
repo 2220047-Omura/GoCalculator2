@@ -42,13 +42,15 @@ int main(int argc, char **argv) {
     int l;
 
     reset();
-	printMatrix3();
+	//printMatrix3();
 
     clock_gettime(CLOCK_REALTIME, &ts_start);
     for (int a = 1; a < size; a++) {
         l = Dia[a];
+        //printf("a, l = %d, %d\n",a,l);
         for (int m = l; m < E; m++){
 		    if (isk[m] == a){
+                //printf("m, l = %d, %d\n",m,l);
 			    Usetsk(m, l);
 		    }
 	    }
@@ -61,6 +63,8 @@ int main(int argc, char **argv) {
     printf("[%s] single size=%d time=%f\n", title, size, t_diff);
 
     //printMatrix3();
+
+    //Norm();
 
 #ifdef PRINT
     printf("multithreaded execution\n");
@@ -83,7 +87,8 @@ int main(int argc, char **argv) {
 
     //printMatrix3();
 
-    Norm();
+    //Norm();
+    printSquare();
 
     allocArrays();
 
