@@ -183,62 +183,130 @@ printMatrix((__mpfi_struct *)hilbert);
 	return 0;
 }
 
+typedef struct
+{
+    int row;
+    int col;
+    double val;
+} Entry;
+
 void setMM() {
     mpfr_t a;
-    mpfr_init2(a,acc);
+    mpfr_init2(a, acc);
     FILE *fp;
     int rows, cols, nnz;
     char line[256];
 
-    if (!mm_filename) {
+    if (!mm_filename)
+    {
         fprintf(stderr, "MM filename is not set\n");
         exit(1);
     }
     fp = fopen(mm_filename, "r");
 
     /* ヘッダ・コメント行をスキップ */
-    do {
-        if (!fgets(line, sizeof(line), fp)) {
+    do
+    {
+        if (!fgets(line, sizeof(line), fp))
+        {
             fprintf(stderr, "不正なファイル形式です\n");
             fclose(fp);
         }
     } while (line[0] == '%');
 
     /* coordinate 形式: 行数 列数 非ゼロ要素数 */
-    if (sscanf(line, "%d %d %d", &rows, &cols, &nnz) != 3) {
+    if (sscanf(line, "%d %d %d", &rows, &cols, &nnz) != 3)
+    {
         fprintf(stderr, "coordinate 形式ではありません\n");
         fclose(fp);
     }
 
-    /* 列ごとに処理 */
-    //printf("in setMM\n");
-    for (int col = 1; col <= cols; col++) {
-        rewind(fp);
+    /* この列の非ゼロ要素を一時保存 */
+    Entry *tmp = malloc(nnz * sizeof(Entry));
 
-    /* 再びヘッダをスキップ */
-        do {
-            fgets(line, sizeof(line), fp);
-        } while (line[0] == '%');
-        fgets(line, sizeof(line), fp); /* サイズ行 */
-
-        for (int t = 0; t < N*N; t++) {
-            int i, j;
-            double val;
-            fscanf(fp, "%d %d %lf", &i, &j, &val);
-            if (i <= j) {
-                mpfr_set_d(a, val, MPFR_RNDN);
-#ifdef MDIMARRAY
-	            mpfi_interv_fr(hilbert[i-1][j-1], a, a);
-                mpfi_interv_fr(hilbert[j-1][i-1], a, a);
-#else
-                mpfi_interv_fr(ptr(hilbert, i-1, j-1), a, a);
-                mpfi_interv_fr(ptr(hilbert, j-1, i-1), a, a);
-#endif // MDIMARRAY
-            }
-        }
-        //printf("Dia[%d] = %d\n", col-1,k-1);
-        //free(a);
+    // printf("in setMM\n");
+    for (int n = 0; n < nnz; n++)
+    {
+        int i, j;
+        double val;
+        fgets(line, sizeof(line), fp);
+        sscanf(line, "%d %d %lf", &i, &j, &val);
+        //printf("n, i, j = %d,%d,%d\n",n,i-1,j-1);
+        tmp[n].row = i - 1; /* 0 始まり */
+        tmp[n].col = j - 1;
+        tmp[n].val = val;
+        //("%lf\n",val);
     }
+
+    for (int n = 0; n < nnz; n++) {
+        if (tmp[n].row <= tmp[n].col) {
+            mpfr_set_d(a, tmp[n].val, MPFR_RNDN);
+            //printf("i, j, A[i][j] = %d, %d, %lf\n", tmp[n].col, tmp[n].row, tmp[n].val);
+            //printInterval(ptr(hilbert, tmp[n].col, tmp[n].row));
+#ifdef MDIMARRAY
+	        mpfi_interv_fr(hilbert[tmp[n].col][tmp[n].row], a, a);
+            mpfi_interv_fr(hilbert[tmp[n].row][tmp[n].col], a, a);
+#else
+            mpfi_interv_fr(ptr(hilbert, tmp[n].col, tmp[n].row), a, a);
+            mpfi_interv_fr(ptr(hilbert, tmp[n].row, tmp[n].col), a, a);
+#endif // MDIMARRAY
+        }
+    }
+//     mpfr_init2(a,acc);
+//     FILE *fp;
+//     int rows, cols, nnz;
+//     char line[256];
+    
+//     if (!mm_filename) {
+//         fprintf(stderr, "MM filename is not set\n");
+//         exit(1);
+//     }
+//     fp = fopen(mm_filename, "r");
+    
+//     /* ヘッダ・コメント行をスキップ */
+//     do {
+//         mpfr_t a;
+//         if (!fgets(line, sizeof(line), fp)) {
+//             fprintf(stderr, "不正なファイル形式です\n");
+//             fclose(fp);
+//         }
+//     } while (line[0] == '%');
+
+//     /* coordinate 形式: 行数 列数 非ゼロ要素数 */
+//     if (sscanf(line, "%d %d %d", &rows, &cols, &nnz) != 3) {
+//         fprintf(stderr, "coordinate 形式ではありません\n");
+//         fclose(fp);
+//     }
+
+//     /* 列ごとに処理 */
+//     //printf("in setMM\n");
+//     for (int col = 1; col <= cols; col++) {
+//         rewind(fp);
+
+//     /* 再びヘッダをスキップ */
+//         do {
+//             fgets(line, sizeof(line), fp);
+//         } while (line[0] == '%');
+//         fgets(line, sizeof(line), fp); /* サイズ行 */
+
+//         for (int t = 0; t < N*N; t++) {
+//             int i, j;
+//             double val;
+//             fscanf(fp, "%d %d %lf", &i, &j, &val);
+//             if (i <= j) {
+//                 mpfr_set_d(a, val, MPFR_RNDN);
+// #ifdef MDIMARRAY
+// 	            mpfi_interv_fr(hilbert[i-1][j-1], a, a);
+//                 mpfi_interv_fr(hilbert[j-1][i-1], a, a);
+// #else
+//                 mpfi_interv_fr(ptr(hilbert, i-1, j-1), a, a);
+//                 mpfi_interv_fr(ptr(hilbert, j-1, i-1), a, a);
+// #endif // MDIMARRAY
+//             }
+//         }
+//         //printf("Dia[%d] = %d\n", col-1,k-1);
+//         //free(a);
+//     }
     fclose(fp);
 
     /* 確認用出力 
