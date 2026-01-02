@@ -115,94 +115,142 @@ int init(void) {
 	return 0;
 }
 
-typedef struct {
+typedef struct
+{
     int row;
     int col;
     double val;
 } Entry;
 
-int cmp_row(const void *a, const void *b) {
-    return ((Entry *)a)->row - ((Entry *)b)->row;
+int cmp_col_major(const void *a, const void *b)
+{
+    Entry *entryA = (Entry *)a;
+    Entry *entryB = (Entry *)b;
+
+    // まず列(col)で比較
+    if (entryA->col != entryB->col)
+    {
+        return entryA->col - entryB->col;
+    }
+    
+    // 列が同じ場合、行(row)で比較
+    return entryA->row - entryB->row;
 }
 
-void setMM(){
+void setMM()
+{
     mpfr_t a;
-    mpfr_init2(a,acc);
+    mpfr_init2(a, acc);
     FILE *fp;
     int rows, cols, nnz;
     char line[256];
-    int k = 0;
 
-    if (!mm_filename) {
+    if (!mm_filename)
+    {
         fprintf(stderr, "MM filename is not set\n");
         exit(1);
     }
     fp = fopen(mm_filename, "r");
 
     /* ヘッダ・コメント行をスキップ */
-    do {
-        if (!fgets(line, sizeof(line), fp)) {
+    do
+    {
+        if (!fgets(line, sizeof(line), fp))
+        {
             fprintf(stderr, "不正なファイル形式です\n");
             fclose(fp);
         }
     } while (line[0] == '%');
 
     /* coordinate 形式: 行数 列数 非ゼロ要素数 */
-    if (sscanf(line, "%d %d %d", &rows, &cols, &nnz) != 3) {
+    if (sscanf(line, "%d %d %d", &rows, &cols, &nnz) != 3)
+    {
         fprintf(stderr, "coordinate 形式ではありません\n");
         fclose(fp);
     }
 
-    /* 列ごとに処理 */
-    //printf("in setMM\n");
-    for (int col = 1; col <= cols; col++) {
-        rewind(fp);
+    /* この列の非ゼロ要素を一時保存 */
+    Entry *tmp = malloc(nnz * sizeof(Entry));
 
-    /* 再びヘッダをスキップ */
-        do {
-            fgets(line, sizeof(line), fp);
-        } while (line[0] == '%');
-        fgets(line, sizeof(line), fp); /* サイズ行 */
+    // printf("in setMM\n");
+    for (int n = 0; n < nnz; n++)
+    {
+        int i, j;
+        double val;
+        fgets(line, sizeof(line), fp);
+        sscanf(line, "%d %d %lf", &i, &j, &val);
+        //printf("n, i, j = %d,%d,%d\n",n,i-1,j-1);
+        tmp[n].row = i - 1; /* 0 始まり */
+        tmp[n].col = j - 1;
+        tmp[n].val = val;
+        //("%lf\n",val);
+    }
+    
+    qsort(tmp, nnz, sizeof(Entry), cmp_col_major);
 
-        /* この列の非ゼロ要素を一時保存 */
-        Entry *tmp = malloc(E * sizeof(Entry));
-        int cnt = 0;
+    FILE *fp2;
+    fp2 = fopen("copyMM.mtx", "w");
 
-        for (int t = 0; t < E; t++) {
-            int i, j;
-            double val;
-            fscanf(fp, "%d %d %lf", &i, &j, &val);
-            if (i <= j && j == col) {
-                tmp[cnt].row = i - 1; /* 0 始まり */
-                tmp[cnt].col = j - 1;
-                tmp[cnt].val = val;
-                cnt++;
+    for (int n = 0; n < nnz; n++) {
+        fprintf(fp2, "%d %d %20.15le\n", tmp[n].row + 1, tmp[n].col + 1,tmp[n].val );
+    }
+    fclose(fp2);
+
+    /* Ask に格納 */
+    int k = 0;
+    int m = 0;
+    int p = 0;
+    int z1 = 0;
+    int cnt = 0;
+    mpfr_t zero;
+    mpfr_init2(zero, acc);
+    mpfr_set_str(zero, "0",10, MPFR_RNDN);
+    
+    for (int n = 0; n < nnz; n++)
+    {
+        if (tmp[n].row <= tmp[n].col)
+        {
+            for (int m = z1 +1; m < tmp[n].row; m++) {
+                mpfi_interv_fr(Ask[k], zero, zero);
+                printInterval2((__mpfi_struct *)&(Ask[k]));
+                isk[k] = m;
+                jsk[k] = tmp[n].col;
+                prof[k] = p;
+                //printf("m = %d\n",m);
+                //printf("(k, i, j, prof) = (%d, %d, %d, %d) in zero\n", k, isk[k],jsk[k],prof[k]);
+                p++;
+                k++;
+                E++;
             }
-        }
-
-        /* 行番号で昇順ソート */
-        qsort(tmp, cnt, sizeof(Entry), cmp_row);
-
-        /* Ask に格納 */
-        for (int p = 0; p < cnt; p++) {
-            mpfr_set_d(a, tmp[p].val, MPFR_RNDN);
+            mpfr_set_d(a, tmp[n].val, MPFR_RNDN);
             mpfi_interv_fr(Ask[k], a, a);
             mpfi_interv_fr(Ask2[k], a, a);
-            isk[k] = tmp[p].row;
-            jsk[k] = tmp[p].col;
+            isk[k] = tmp[n].row;
+            jsk[k] = tmp[n].col;
             prof[k] = p;
-            //printf("prof %d ",prof[k]);
+            p++;
+            //printf("isk, jsk = %d, %d", isk[k], jsk[k]);
             //printInterval((__mpfi_struct *)&(Ask[k]));
-            //printf("col=%d cnt=%d k=%d E=%d\n", col, cnt, k, E);
-            k += 1;
+            // printf("col=%d cnt=%d k=%d E=%d\n", col, cnt, k, E);
+            if (tmp[n].row == tmp[n].col)
+            {
+                p = 0;
+                cnt++;
+                Dia[m] = k;
+                m++;
+            }
+            k++;
         }
-        Dia[col-1] = k-1;
-        //printf("Dia[%d] = %d\n", col-1,k-1);
-        free(tmp);
     }
+    if (cnt != cols) {
+        printf("対角要素がありません\n");
+        exit(1);
+    }
+    // printf("Dia[%d] = %d\n", col-1,k-1);
+    free(tmp);
     fclose(fp);
 
-    /* 確認用出力 
+    /* 確認用出力
     printf("Ask (column-major, row-sorted):\n");
     for (int i = 0; i < k; i++) {
        printf("(i, j, Ask) = %d\n",isk[i]);
@@ -210,7 +258,90 @@ void setMM(){
         //printInterval((__mpfi_struct *)&(Ask[i]));
     }
     */
-    
+    // mpfr_t a;
+    // mpfr_init2(a,acc);
+    // FILE *fp;
+    // int rows, cols, nnz;
+    // char line[256];
+    // int k = 0;
+
+    // if (!mm_filename) {
+    //     fprintf(stderr, "MM filename is not set\n");
+    //     exit(1);
+    // }
+    // fp = fopen(mm_filename, "r");
+
+    // /* ヘッダ・コメント行をスキップ */
+    // do {
+    //     if (!fgets(line, sizeof(line), fp)) {
+    //         fprintf(stderr, "不正なファイル形式です\n");
+    //         fclose(fp);
+    //     }
+    // } while (line[0] == '%');
+
+    // /* coordinate 形式: 行数 列数 非ゼロ要素数 */
+    // if (sscanf(line, "%d %d %d", &rows, &cols, &nnz) != 3) {
+    //     fprintf(stderr, "coordinate 形式ではありません\n");
+    //     fclose(fp);
+    // }
+
+    // /* 列ごとに処理 */
+    // //printf("in setMM\n");
+    // for (int col = 1; col <= cols; col++) {
+    //     rewind(fp);
+
+    // /* 再びヘッダをスキップ */
+    //     do {
+    //         fgets(line, sizeof(line), fp);
+    //     } while (line[0] == '%');
+    //     fgets(line, sizeof(line), fp); /* サイズ行 */
+
+    //     /* この列の非ゼロ要素を一時保存 */
+    //     Entry *tmp = malloc(E * sizeof(Entry));
+    //     int cnt = 0;
+
+    //     for (int t = 0; t < E; t++) {
+    //         int i, j;
+    //         double val;
+    //         fscanf(fp, "%d %d %lf", &i, &j, &val);
+    //         if (i <= j && j == col) {
+    //             tmp[cnt].row = i - 1; /* 0 始まり */
+    //             tmp[cnt].col = j - 1;
+    //             tmp[cnt].val = val;
+    //             cnt++;
+    //         }
+    //     }
+
+    //     /* 行番号で昇順ソート */
+    //     qsort(tmp, cnt, sizeof(Entry), cmp_row);
+
+    //     /* Ask に格納 */
+    //     for (int p = 0; p < cnt; p++) {
+    //         mpfr_set_d(a, tmp[p].val, MPFR_RNDN);
+    //         mpfi_interv_fr(Ask[k], a, a);
+    //         mpfi_interv_fr(Ask2[k], a, a);
+    //         isk[k] = tmp[p].row;
+    //         jsk[k] = tmp[p].col;
+    //         prof[k] = p;
+    //         //printf("prof %d ",prof[k]);
+    //         //printInterval((__mpfi_struct *)&(Ask[k]));
+    //         //printf("col=%d cnt=%d k=%d E=%d\n", col, cnt, k, E);
+    //         k += 1;
+    //     }
+    //     Dia[col-1] = k-1;
+    //     //printf("Dia[%d] = %d\n", col-1,k-1);
+    //     free(tmp);
+    // }
+    // fclose(fp);
+
+    // /* 確認用出力
+    // printf("Ask (column-major, row-sorted):\n");
+    // for (int i = 0; i < k; i++) {
+    // printf("(i, j, Ask) = %d\n",isk[i]);
+    //     //printf("(i, j) = %d %d",isk2[i], jsk[i]);
+    //     //printInterval((__mpfi_struct *)&(Ask[i]));
+    // }
+    // */
 }
 
 void mulDiagonal(){

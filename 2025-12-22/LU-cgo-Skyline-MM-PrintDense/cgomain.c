@@ -36,12 +36,12 @@ int main(int argc, char **argv) {
 
     /* skyline 初期化 */
     init();
+    reset();
 
     int E = getN();
     printf("E=%d\n",E);
     int l;
 
-    reset();
 	//printMatrix3();
 
     clock_gettime(CLOCK_REALTIME, &ts_start);
