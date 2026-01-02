@@ -205,14 +205,14 @@ void setMM()
     mpfr_t zero;
     mpfr_init2(zero, acc);
     mpfr_set_str(zero, "0",10, MPFR_RNDN);
-    
+
     for (int n = 0; n < nnz; n++)
     {
         if (tmp[n].row <= tmp[n].col)
         {
             for (int m = z1 +1; m < tmp[n].row; m++) {
                 mpfi_interv_fr(Ask[k], zero, zero);
-                printInterval2((__mpfi_struct *)&(Ask[k]));
+                //printInterval2((__mpfi_struct *)&(Ask[k]));
                 isk[k] = m;
                 jsk[k] = tmp[n].col;
                 prof[k] = p;
@@ -226,6 +226,7 @@ void setMM()
             mpfi_interv_fr(Ask[k], a, a);
             mpfi_interv_fr(Ask2[k], a, a);
             isk[k] = tmp[n].row;
+            z1 = tmp[n].row;
             jsk[k] = tmp[n].col;
             prof[k] = p;
             p++;
