@@ -44,40 +44,87 @@ int getIsk(int c){
     return Dia[c];
 }
 
-void getNnz(void){
+typedef struct
+{
+    int col;
+    int row;
+} Entry2;
+
+int cmp_col_major2(const void *a, const void *b)
+{
+    Entry2 *entryA = (Entry2 *)a;
+    Entry2 *entryB = (Entry2 *)b;
+
+    // まず列(col)で比較
+    if (entryA->col != entryB->col)
+    {
+        return entryA->col - entryB->col;
+    }
+    
+    // 列が同じ場合、行(row)で比較
+    return entryA->row - entryB->row;
+}
+
+void getNnz(void)
+{
     FILE *fp;
     int rows, cols, nnz;
     int i, j;
     double val;
     char line[256];
 
-    if (!mm_filename) {
+    if (!mm_filename)
+    {
         fprintf(stderr, "MM filename is not set\n");
         exit(1);
     }
 
     fp = fopen(mm_filename, "r");
-    if (!fp) {
+    if (!fp)
+    {
         perror("fopen");
         exit(1);
     }
 
     /* コメントスキップ */
-    do {
+    do
+    {
         fgets(line, sizeof(line), fp);
     } while (line[0] == '%');
 
     sscanf(line, "%d %d %d", &rows, &cols, &nnz);
-    //printf("%d %d %d\n", rows, cols, nnz);
+    // printf("%d %d %d\n", rows, cols, nnz);
     size = cols;
-    for (int k = 0; k<nnz; k++){
-        fscanf(fp, "%d %d %lf", &i, &j, &val);
-        if (i <= j) {
-            E += 1;
-        }
+
+    /* この列の非ゼロ要素を一時保存 */
+    Entry2 *tmp = malloc(nnz * sizeof(Entry2));
+
+    for (int k = 0; k < nnz; k++)
+    {
+        fgets(line, sizeof(line), fp);
+        sscanf(line, "%d %d %lf", &i, &j, &val);
+        tmp[k].row = i - 1; /* 0 始まり */
+        tmp[k].col = j - 1;
     }
-    //printf("E from getNnz = %d\n",E);
-    //E = nnz;
+
+    qsort(tmp, nnz, sizeof(Entry2), cmp_col_major2);
+
+    int iE = 0;
+    int jE = 0;
+    for (int k = 0; k < nnz; k++)
+    {
+        if (jE != tmp[k].col) {
+            jE = tmp[k].col;
+            iE = tmp[k].row;
+        }
+        if (tmp[k].row == tmp[k].col) {
+            E += (tmp[k].row + 1) - iE;
+            //jE = tmp[k].col;
+        }
+        //printf("i, j, E = %d, %d, %d\n",tmp[k].row,tmp[k].col, E);
+    }
+    // printf("E from getNnz = %d\n",E);
+    // E = nnz;
 
     fclose(fp);
 }
