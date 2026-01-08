@@ -47,6 +47,27 @@ int getIsk(int c)
     return Dia[c];
 }
 
+typedef struct
+{
+    int col;
+    int row;
+} Entry2;
+
+int cmp_col_major2(const void *a, const void *b)
+{
+    Entry2 *entryA = (Entry2 *)a;
+    Entry2 *entryB = (Entry2 *)b;
+
+    // まず列(col)で比較
+    if (entryA->col != entryB->col)
+    {
+        return entryA->col - entryB->col;
+    }
+    
+    // 列が同じ場合、行(row)で比較
+    return entryA->row - entryB->row;
+}
+
 void getNnz(void)
 {
     FILE *fp;
@@ -77,13 +98,33 @@ void getNnz(void)
     sscanf(line, "%d %d %d", &rows, &cols, &nnz);
     // printf("%d %d %d\n", rows, cols, nnz);
     size = cols;
+
+    /* この列の非ゼロ要素を一時保存 */
+    Entry2 *tmp = malloc(nnz * sizeof(Entry2));
+
     for (int k = 0; k < nnz; k++)
     {
-        fscanf(fp, "%d %d %lf", &i, &j, &val);
-        if (i <= j)
-        {
-            E += 1;
+        fgets(line, sizeof(line), fp);
+        sscanf(line, "%d %d %lf", &i, &j, &val);
+        tmp[k].row = i - 1; /* 0 始まり */
+        tmp[k].col = j - 1;
+    }
+
+    qsort(tmp, nnz, sizeof(Entry2), cmp_col_major2);
+
+    int iE = 0;
+    int jE = 0;
+    for (int k = 0; k < nnz; k++)
+    {
+        if (jE != tmp[k].col) {
+            jE = tmp[k].col;
+            iE = tmp[k].row;
         }
+        if (tmp[k].row == tmp[k].col) {
+            E += (tmp[k].row + 1) - iE;
+            //jE = tmp[k].col;
+        }
+        //printf("i, j, E = %d, %d, %d\n",tmp[k].row,tmp[k].col, E);
     }
     // printf("E from getNnz = %d\n",E);
     // E = nnz;
@@ -227,7 +268,7 @@ void setMM()
         {
             for (int m = z1 +1; m < tmp[n].row; m++) {
                 mpfi_interv_fr(Ask[k], zero, zero);
-                printInterval2((__mpfi_struct *)&(Ask[k]));
+                //printInterval2((__mpfi_struct *)&(Ask[k]));
                 isk[k] = m;
                 jsk[k] = tmp[n].col;
                 prof[k] = p;
@@ -235,11 +276,10 @@ void setMM()
                 //printf("(k, i, j, prof) = (%d, %d, %d, %d) in zero\n", k, isk[k],jsk[k],prof[k]);
                 p++;
                 k++;
-                E++;
             }
             mpfr_set_d(a, tmp[n].val, MPFR_RNDN);
             mpfi_interv_fr(Ask[k], a, a);
-            printInterval2((__mpfi_struct *)&(Ask[k]));
+            //printInterval2((__mpfi_struct *)&(Ask[k]));
             mpfi_interv_fr(Ask2[k], a, a);
             isk[k] = tmp[n].row;
             z1 = tmp[n].row;
