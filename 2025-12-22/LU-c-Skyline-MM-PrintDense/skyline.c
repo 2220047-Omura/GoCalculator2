@@ -426,11 +426,12 @@ void allocArrays()
 
 void printMatrix3()
 {
-    for (int i = 0; i < E; i++)
+    for (int i = E-3; i < E; i++)
     {
         printInterval((__mpfi_struct *)&(Ask[i]));
     }
 }
+
 
 void Norm()
 {
