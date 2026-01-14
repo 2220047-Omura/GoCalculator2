@@ -61,10 +61,18 @@ void forkjoin(int a, int c, int isk) {
 */
 
 void forkjoin(int a, int l){
-#pragma omp parallel for
+//#pragma omp parallel for
+	int i = 0;
 	for (int m = l; m < E; m++){
 		if (isk[m] == a){
-			Usetsk(m, l);
+			//Usetsk(m, l);
+			arrM[i] = m;
+			i++;
 		}
+	}
+	
+#pragma omp parallel for
+	for (int j = 0; j < i; j++) {
+		Usetsk(arrM[j], l);
 	}
 }

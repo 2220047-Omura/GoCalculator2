@@ -16,10 +16,12 @@ char buf[256];
 static const char *mm_filename = NULL;
 
 int size = 0;     // ← 実行時に決まる 正方行列の一辺の大きさ
+int MAXp;
 int *Dia = NULL;  // Diagonal. Dia[n]に行(列)番号nの対角要素がAskのどこにあるのかを格納
 int *isk = NULL;  // isk[n]にnの行番号を格納
 int *jsk = NULL;  // isk[n]にnの列番号を格納
 int *prof = NULL; // profile. prof[n]にnの上に非ゼロ要素が何個あるかを格納
+int *arrM;
 
 mpfi_t *Ask;
 // int isk[size];
@@ -258,6 +260,7 @@ void setMM()
     int p = 0;
     int z1 = 0;
     int cnt = 0;
+    MAXp = 0;
     mpfr_t zero;
     mpfr_init2(zero, acc);
     mpfr_set_str(zero, "0",10, MPFR_RNDN);
@@ -292,11 +295,14 @@ void setMM()
             // printf("col=%d cnt=%d k=%d E=%d\n", col, cnt, k, E);
             if (tmp[n].row == tmp[n].col)
             {
-                p = 0;
                 cnt++;
                 Dia[m] = k;
+                if (MAXp < p) {
+                    MAXp = p;
+                }
                 //printf("Dia[%d] = %d\n",m,Dia[m]);
                 m++;
+                p = 0;
             }
             k++;
         }
@@ -305,6 +311,7 @@ void setMM()
         printf("対角要素がありません\n");
         exit(1);
     }
+    arrM = (int *)malloc((MAXp + 1) * sizeof(int));
     // printf("Dia[%d] = %d\n", col-1,k-1);
     free(tmp);
     fclose(fp);
@@ -431,7 +438,6 @@ void printMatrix3()
         printInterval((__mpfi_struct *)&(Ask[i]));
     }
 }
-
 
 void Norm()
 {

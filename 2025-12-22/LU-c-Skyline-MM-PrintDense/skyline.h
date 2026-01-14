@@ -16,6 +16,8 @@ extern int size;     // 行列サイズ（列数）
 extern int *Dia;     // 動的配列
 extern int *isk;
 extern int *prof;
+extern int MAXp;
+extern int *arrM;
 
 //extern int size;
 extern int n;
