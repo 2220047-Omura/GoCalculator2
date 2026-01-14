@@ -4,13 +4,10 @@
 #include <mpfi.h>
 #include <mpfi_io.h>
 #include "crout.h"
+#include "libcgocrout.h"
 
 #define PRINT
 
-
-typedef long long GoInt64;
-typedef GoInt64 GoInt;
-void forkjoin(GoInt k, GoInt N);
 
 int main(int argc, char **argv) {
 	/* ===== 追加：引数チェック ===== */
@@ -40,9 +37,9 @@ int main(int argc, char **argv) {
 	srand(0);
 
     /* skyline 初期化 */
-    printf("N=%d\n",N);
+	reset();
 
-    reset();
+    printf("N=%d\n",N);
 
     printMatrix3();
 
