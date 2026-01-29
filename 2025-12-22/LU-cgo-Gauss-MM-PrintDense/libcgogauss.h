@@ -85,6 +85,7 @@ extern "C" {
 #endif
 
 extern void call1(GoInt k, GoInt i, GoInt N);
+extern void call1WG(GoInt k, GoInt i, GoInt N);
 extern void forkjoin(GoInt k, GoInt N);
 
 #ifdef __cplusplus

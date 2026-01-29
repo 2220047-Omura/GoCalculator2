@@ -20,19 +20,15 @@ var wg sync.WaitGroup
 func call1(k int, i int, N int) {
 	C.LUfact1(C.int(k), C.int(i))
 	for j := k + 1; j < N; j++ {
-		call2(k, i, j)
+		C.LUfact2(C.int(k), C.int(i), C.int(j))
 	}
 }
 
-func call2(k int, i int, j int) {
-	C.LUfact2(C.int(k), C.int(i), C.int(j))
-}
-
-func call3(k int, i int, N int) {
-	defer wg.Done()
+//export call1WG
+func call1WG(k int, i int, N int) {
 	C.LUfact1(C.int(k), C.int(i))
 	for j := k + 1; j < N; j++ {
-		call2(k, i, j)
+		C.LUfact2(C.int(k), C.int(i), C.int(j))
 	}
 }
 
@@ -40,7 +36,7 @@ func call3(k int, i int, N int) {
 func forkjoin(k int, N int) {
 	wg.Add(N - (k + 1))
 	for i := k + 1; i < N; i++ {
-		go call3(k, i, N)
+		go call1WG(k, i, N)
 	}
 	wg.Wait()
 }
