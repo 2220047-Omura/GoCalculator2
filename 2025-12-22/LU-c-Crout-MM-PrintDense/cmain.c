@@ -23,7 +23,7 @@ int main(int argc, char **argv) {
     /* ===== 追加：Matrix Market ファイル名を skyline に渡す ===== */
     setMMFilename(argv[1]);
 
-    char title[] = "skyline";
+    char title[] = "crout";
 
     init();
 
@@ -43,11 +43,11 @@ int main(int argc, char **argv) {
     srand(0);
 
     /* skyline 初期化 */
+	reset();
+	
     printf("N=%d\n",N);
 
-    reset();
-
-    printMatrix3();
+    // printMatrix3();
 	
 	clock_gettime(CLOCK_REALTIME, &ts_start);
 	for (int i = 0; i < N; i++) {
@@ -97,7 +97,7 @@ int main(int argc, char **argv) {
 
 #ifdef PRINT
     // printMatrix();
-	printMatrix3();
+	// printMatrix3();
 #endif // PRINT
 
 	return 0;
