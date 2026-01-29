@@ -26,6 +26,7 @@ func call1(k int, i int, N int) {
 
 //export call1WG
 func call1WG(k int, i int, N int) {
+	defer wg.Done()
 	C.LUfact1(C.int(k), C.int(i))
 	for j := k + 1; j < N; j++ {
 		C.LUfact2(C.int(k), C.int(i), C.int(j))
