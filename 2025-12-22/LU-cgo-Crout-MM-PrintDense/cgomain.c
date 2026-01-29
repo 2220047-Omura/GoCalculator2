@@ -41,9 +41,10 @@ int main(int argc, char **argv) {
 
     printf("N=%d\n",N);
 
-    printMatrix3();
+    // printMatrix3();
 
 	clock_gettime(CLOCK_REALTIME, &ts_start);
+	/*
 	for (int i = 0; i < N; i++) {
 		for (int j = i; j < N; j++) {
 			// Ucall(i, j);
@@ -54,13 +55,14 @@ int main(int argc, char **argv) {
 			Lset(j, i);
 		}
 	}
+	*/
 	clock_gettime(CLOCK_REALTIME, &ts_stop);
 	t_diff = (ts_stop.tv_sec - ts_start.tv_sec) + (ts_stop.tv_nsec - ts_start.tv_nsec) / 1000000000.0;
 	printf("[%s] single N=%d time=%f\n", title, N, t_diff);
 
 #ifdef PRINT
     // printMatrix();
-	printMatrix3();
+	// printMatrix3();
 #endif
 
 #ifdef PRINT
@@ -87,7 +89,7 @@ int main(int argc, char **argv) {
 
 #ifdef PRINT
     // printMatrix();
-	printMatrix3();
+	// printMatrix3();
 #endif // PRINT
 
 	return 0;
