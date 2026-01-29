@@ -45,6 +45,7 @@ int main(int argc, char **argv) {
 	//printMatrix3();
 
     clock_gettime(CLOCK_REALTIME, &ts_start);
+    /*
     for (int a = 1; a < size; a++) {
         l = Dia[a];
         //printf("a, l = %d, %d\n",a,l);
@@ -55,14 +56,14 @@ int main(int argc, char **argv) {
 		    }
 	    }
     }
-
+    */
     clock_gettime(CLOCK_REALTIME, &ts_stop);
     t_diff = (ts_stop.tv_sec - ts_start.tv_sec)
            + (ts_stop.tv_nsec - ts_start.tv_nsec) / 1e9;
 
     printf("[%s] single size=%d time=%f\n", title, size, t_diff);
 
-    //printMatrix3();
+    // printMatrix3();
     //printSquare();
 
     //Norm();
@@ -91,10 +92,10 @@ int main(int argc, char **argv) {
 
     printf("[%s] multi size=%d time=%f\n", title, size, t_diff);
 
-    //printMatrix3();
+    // printMatrix3();
 
     //Norm();
-    printSquare();
+    //printSquare();
 
     allocArrays();
 

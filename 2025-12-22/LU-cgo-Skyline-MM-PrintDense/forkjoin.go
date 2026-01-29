@@ -30,8 +30,8 @@ func makeIsk(n int) {
 
 var wg sync.WaitGroup
 
-func UcallWG(m int, l int, wg2 *sync.WaitGroup) {
-	defer wg2.Done()
+func UcallWG(m int, l int) {
+	defer wg.Done()
 	C.Usetsk(C.int(m),C.int(l))
 }
 
@@ -40,7 +40,7 @@ func forkjoin(a int, l int) {
 	for m := l; m < E; m++ {
 		if isk[m] == a {
 			wg.Add(1)
-			go UcallWG(m, l, &wg)
+			go UcallWG(m, l)
 		}
 	}
 	wg.Wait()
