@@ -38,8 +38,8 @@ func call3(k int, i int, N int) {
 
 //export forkjoin
 func forkjoin(k int, N int) {
+	wg.Add(N - (k + 1))
 	for i := k + 1; i < N; i++ {
-		wg.Add(1)
 		go call3(k, i, N)
 	}
 	wg.Wait()
