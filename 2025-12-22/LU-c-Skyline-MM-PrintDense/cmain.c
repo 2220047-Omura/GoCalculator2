@@ -63,7 +63,7 @@ int main(int argc, char **argv) {
 
     printf("[%s] single size=%d time=%f\n", title, size, t_diff);
 
-    //printMatrix3();
+    // printMatrix3();
 
     //Norm();
 
@@ -86,10 +86,10 @@ int main(int argc, char **argv) {
 
     printf("[%s] multi size=%d time=%f\n", title, size, t_diff);
 
-    //printMatrix3();
+    // printMatrix3();
 
     //Norm();
-    printSquare();
+    //printSquare();
 
     allocArrays();
 
