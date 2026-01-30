@@ -3,6 +3,7 @@
 
 INCLUDEPATH="-I/opt/homebrew/include"
 LIBPATH="-L. -L/opt/homebrew/lib -Wl,-rpath,/opt/homebrew/lib -Wl,-rpath,."
+CFLAGS="-O3 -Wall"
 
 set -x
 

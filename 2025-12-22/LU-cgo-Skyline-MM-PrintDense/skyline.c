@@ -18,7 +18,7 @@ static const char *mm_filename = NULL;
 int size = 0;     // ← 実行時に決まる 正方行列の一辺の大きさ
 int *Dia = NULL;  // Diagonal. Dia[n]に行(列)番号nの対角要素がAskのどこにあるのかを格納
 int *isk = NULL;  // isk[n]にnの行番号を格納
-int *jsk = NULL;  // isk[n]にnの列番号を格納
+int *jsk = NULL;  // jsk[n]にnの列番号を格納
 int *prof = NULL; // profile. prof[n]にnの上に非ゼロ要素が何個あるかを格納
 
 mpfi_t *Ask;
@@ -423,10 +423,19 @@ void allocArrays()
     free(Bsk);
     free(Xsk);
 }
-
+/*
 void printMatrix3()
 {
     for (int i = 0; i < E; i++)
+    {
+        printInterval((__mpfi_struct *)&(Ask[i]));
+    }
+}
+*/
+
+void printMatrix3()
+{
+    for (int i = E-3; i < E; i++)
     {
         printInterval((__mpfi_struct *)&(Ask[i]));
     }

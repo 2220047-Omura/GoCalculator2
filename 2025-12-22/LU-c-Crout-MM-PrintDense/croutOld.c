@@ -21,10 +21,10 @@ char buf[256];
 bool boolsk = true;
 
 #ifdef MDIMARRAY
-mpfi_t A[N][N];
+mpfi_t hilbert[N][N];
 mpfi_t b[N];
 #else
-__mpfi_struct *A;
+__mpfi_struct *hilbert;
 __mpfi_struct *b;
 #endif // MDIMARRAY
 
@@ -96,7 +96,7 @@ int init(void) {
 #ifdef MDIMARRAY
     //mpfi_init2(b[i], acc);
 #else
-    A = (__mpfi_struct *)malloc(N * N * sizeof(__mpfi_struct));
+    hilbert = (__mpfi_struct *)malloc(N * N * sizeof(__mpfi_struct));
     b = (__mpfi_struct *)malloc(N * sizeof(__mpfi_struct));
     SUM = (__mpfi_struct *)malloc(N * N * sizeof(__mpfi_struct));
     MUL = (__mpfi_struct *)malloc(N * N * sizeof(__mpfi_struct));
@@ -110,11 +110,11 @@ int init(void) {
 #endif // MDIMARRAY
         for (int j = 0; j < N; j++) {
 #ifdef MDIMARRAY
-            mpfi_init2(A[i][j], acc);
+            mpfi_init2(hilbert[i][j], acc);
 	        mpfi_init2(SUM[i][j], acc);
 	        mpfi_init2(MUL[i][j], acc);
 #else
-            mpfi_init2(ptr(A, i, j), acc);
+            mpfi_init2(ptr(hilbert, i, j), acc);
             mpfi_init2(ptr(SUM, i, j), acc);
             mpfi_init2(ptr(MUL, i, j), acc);
 #endif // MDIMARRAY
@@ -127,9 +127,9 @@ int init(void) {
     for (int i = 0; i < N; i++) {
         for (int j = 0; j < N; j++) {
 #ifdef MDIMARRAY
-        mpfi_set_str(A[i][j], "0", 10);
+        mpfi_set_str(hilbert[i][j], "0", 10);
 #else
-        mpfi_set_str(ptr(A,i,j), "0", 10);
+        mpfi_set_str(ptr(hilbert,i,j), "0", 10);
 #endif // MDIMARRAY
         }
     }
@@ -183,130 +183,62 @@ printMatrix((__mpfi_struct *)hilbert);
 	return 0;
 }
 
-typedef struct
-{
-    int row;
-    int col;
-    double val;
-} Entry;
-
 void setMM() {
     mpfr_t a;
-    mpfr_init2(a, acc);
+    mpfr_init2(a,acc);
     FILE *fp;
     int rows, cols, nnz;
     char line[256];
 
-    if (!mm_filename)
-    {
+    if (!mm_filename) {
         fprintf(stderr, "MM filename is not set\n");
         exit(1);
     }
     fp = fopen(mm_filename, "r");
 
     /* ヘッダ・コメント行をスキップ */
-    do
-    {
-        if (!fgets(line, sizeof(line), fp))
-        {
+    do {
+        if (!fgets(line, sizeof(line), fp)) {
             fprintf(stderr, "不正なファイル形式です\n");
             fclose(fp);
         }
     } while (line[0] == '%');
 
     /* coordinate 形式: 行数 列数 非ゼロ要素数 */
-    if (sscanf(line, "%d %d %d", &rows, &cols, &nnz) != 3)
-    {
+    if (sscanf(line, "%d %d %d", &rows, &cols, &nnz) != 3) {
         fprintf(stderr, "coordinate 形式ではありません\n");
         fclose(fp);
     }
 
-    /* この列の非ゼロ要素を一時保存 */
-    Entry *tmp = malloc(nnz * sizeof(Entry));
+    /* 列ごとに処理 */
+    //printf("in setMM\n");
+    for (int col = 1; col <= cols; col++) {
+        rewind(fp);
 
-    // printf("in setMM\n");
-    for (int n = 0; n < nnz; n++)
-    {
-        int i, j;
-        double val;
-        fgets(line, sizeof(line), fp);
-        sscanf(line, "%d %d %lf", &i, &j, &val);
-        //printf("n, i, j = %d,%d,%d\n",n,i-1,j-1);
-        tmp[n].row = i - 1; /* 0 始まり */
-        tmp[n].col = j - 1;
-        tmp[n].val = val;
-        //("%lf\n",val);
-    }
+    /* 再びヘッダをスキップ */
+        do {
+            fgets(line, sizeof(line), fp);
+        } while (line[0] == '%');
+        fgets(line, sizeof(line), fp); /* サイズ行 */
 
-    for (int n = 0; n < nnz; n++) {
-        if (tmp[n].row <= tmp[n].col) {
-            mpfr_set_d(a, tmp[n].val, MPFR_RNDN);
-            //printf("i, j, A[i][j] = %d, %d, %lf\n", tmp[n].col, tmp[n].row, tmp[n].val);
-            //printInterval(ptr(hilbert, tmp[n].col, tmp[n].row));
+        for (int t = 0; t < N*N; t++) {
+            int i, j;
+            double val;
+            fscanf(fp, "%d %d %lf", &i, &j, &val);
+            if (i <= j) {
+                mpfr_set_d(a, val, MPFR_RNDN);
 #ifdef MDIMARRAY
-	        mpfi_interv_fr(A[tmp[n].col][tmp[n].row], a, a);
-            mpfi_interv_fr(A[tmp[n].row][tmp[n].col], a, a);
+	            mpfi_interv_fr(hilbert[i-1][j-1], a, a);
+                mpfi_interv_fr(hilbert[j-1][i-1], a, a);
 #else
-            mpfi_interv_fr(ptr(A, tmp[n].col, tmp[n].row), a, a);
-            mpfi_interv_fr(ptr(A, tmp[n].row, tmp[n].col), a, a);
+                mpfi_interv_fr(ptr(hilbert, i-1, j-1), a, a);
+                mpfi_interv_fr(ptr(hilbert, j-1, i-1), a, a);
 #endif // MDIMARRAY
+            }
         }
+        //printf("Dia[%d] = %d\n", col-1,k-1);
+        //free(a);
     }
-//     mpfr_init2(a,acc);
-//     FILE *fp;
-//     int rows, cols, nnz;
-//     char line[256];
-    
-//     if (!mm_filename) {
-//         fprintf(stderr, "MM filename is not set\n");
-//         exit(1);
-//     }
-//     fp = fopen(mm_filename, "r");
-    
-//     /* ヘッダ・コメント行をスキップ */
-//     do {
-//         mpfr_t a;
-//         if (!fgets(line, sizeof(line), fp)) {
-//             fprintf(stderr, "不正なファイル形式です\n");
-//             fclose(fp);
-//         }
-//     } while (line[0] == '%');
-
-//     /* coordinate 形式: 行数 列数 非ゼロ要素数 */
-//     if (sscanf(line, "%d %d %d", &rows, &cols, &nnz) != 3) {
-//         fprintf(stderr, "coordinate 形式ではありません\n");
-//         fclose(fp);
-//     }
-
-//     /* 列ごとに処理 */
-//     //printf("in setMM\n");
-//     for (int col = 1; col <= cols; col++) {
-//         rewind(fp);
-
-//     /* 再びヘッダをスキップ */
-//         do {
-//             fgets(line, sizeof(line), fp);
-//         } while (line[0] == '%');
-//         fgets(line, sizeof(line), fp); /* サイズ行 */
-
-//         for (int t = 0; t < N*N; t++) {
-//             int i, j;
-//             double val;
-//             fscanf(fp, "%d %d %lf", &i, &j, &val);
-//             if (i <= j) {
-//                 mpfr_set_d(a, val, MPFR_RNDN);
-// #ifdef MDIMARRAY
-// 	            mpfi_interv_fr(hilbert[i-1][j-1], a, a);
-//                 mpfi_interv_fr(hilbert[j-1][i-1], a, a);
-// #else
-//                 mpfi_interv_fr(ptr(hilbert, i-1, j-1), a, a);
-//                 mpfi_interv_fr(ptr(hilbert, j-1, i-1), a, a);
-// #endif // MDIMARRAY
-//             }
-//         }
-//         //printf("Dia[%d] = %d\n", col-1,k-1);
-//         //free(a);
-//     }
     fclose(fp);
 
     /* 確認用出力 
@@ -328,9 +260,9 @@ void setSkyline(){
         double r = ((double)rand())/RAND_MAX;
 	    mpfr_set_d(a, r, MPFR_RNDN);
 #ifdef MDIMARRAY
-	    mpfi_interv_fr(A[i][i], a, a);
+	    mpfi_interv_fr(hilbert[i][i], a, a);
 #else
-        mpfi_interv_fr(ptr(A, i, i), a, a);
+        mpfi_interv_fr(ptr(hilbert, i, i), a, a);
 #endif // MDIMARRAY
         if (i-c<0){
             c = 0;
@@ -339,11 +271,11 @@ void setSkyline(){
 	        double r = ((double)rand())/RAND_MAX;
 	        mpfr_set_d(a, r, MPFR_RNDN);
 #ifdef MDIMARRAY
-	        mpfi_interv_fr(A[i][j], a, a);
-            mpfi_interv_fr(A[j][i], a, a);
+	        mpfi_interv_fr(hilbert[i][j], a, a);
+            mpfi_interv_fr(hilbert[j][i], a, a);
 #else
-            mpfi_interv_fr(ptr(A, i, j), a, a);
-            mpfi_interv_fr(ptr(A, j, i), a, a);
+            mpfi_interv_fr(ptr(hilbert, i, j), a, a);
+            mpfi_interv_fr(ptr(hilbert, j, i), a, a);
 #endif // MDIMARRAY
         }
         c += 2;
@@ -359,19 +291,19 @@ void setDense(void){
         double r = ((double)rand())/RAND_MAX;
 	    mpfr_set_d(a, r, MPFR_RNDN);
 #ifdef MDIMARRAY
-	    mpfi_interv_fr(A[i][i], a, a);
+	    mpfi_interv_fr(hilbert[i][i], a, a);
 #else
-        mpfi_interv_fr(ptr(A, i, i), a, a);
+        mpfi_interv_fr(ptr(hilbert, i, i), a, a);
 #endif // MDIMARRAY
         for (int j = i+1; j < N; j++) {
 	           double r = ((double)rand())/RAND_MAX;
 	           mpfr_set_d(a, r, MPFR_RNDN);
 #ifdef MDIMARRAY
-	            mpfi_interv_fr(A[i][j], a, a);
-                mpfi_interv_fr(A[j][i], a, a);
+	            mpfi_interv_fr(hilbert[i][j], a, a);
+                mpfi_interv_fr(hilbert[j][i], a, a);
 #else
-                mpfi_interv_fr(ptr(A, i, j), a, a);
-                mpfi_interv_fr(ptr(A, j, i), a, a);
+                mpfi_interv_fr(ptr(hilbert, i, j), a, a);
+                mpfi_interv_fr(ptr(hilbert, j, i), a, a);
 #endif // MDIMARRAY
         }
     }
@@ -393,9 +325,9 @@ void mulDiagonal(void){
     //int c = 0;
     for (int i = 0; i < N; i++){
 #ifdef MDIMARRAY
-	    mpfi_mul(A[i][i], A[i][i], hdr);
+	    mpfi_mul(hilbert[i][i], hilbert[i][i], hdr);
 #else
-        mpfi_mul(ptr(A, i, i), ptr(A, i, i), hdr);
+        mpfi_mul(ptr(hilbert, i, i), ptr(hilbert, i, i), hdr);
 #endif // MDIMARRAY
         mpfr_set_si(toI, i, MPFR_RNDN);
         for (int j= i+1; j < N; j ++){
@@ -406,11 +338,11 @@ void mulDiagonal(void){
             mpfi_div(div, hdr, div);
 
 #ifdef MDIMARRAY
-	        mpfi_mul(A[i][j], A[i][j], div);
-            mpfi_mul(A[j][i], A[j][i], div);
+	        mpfi_mul(hilbert[i][j], hilbert[i][j], div);
+            mpfi_mul(hilbert[j][i], hilbert[j][i], div);
 #else
-            mpfi_mul(ptr(A, i, j), ptr(A, i, j), div);
-            mpfi_mul(ptr(A, j, i), ptr(A, j, i), div);
+            mpfi_mul(ptr(hilbert, i, j), ptr(hilbert, i, j), div);
+            mpfi_mul(ptr(hilbert, j, i), ptr(hilbert, j, i), div);
 #endif // MDIMARRAY
         }
     }
@@ -460,17 +392,17 @@ void Uset(int i,int j){
 */
 	   for (int k = 0; k < i; k++) {
 #ifdef MDIMARRAY
-	       mpfi_mul(MUL[i][j], A[i][k], A[k][j]);
+	       mpfi_mul(MUL[i][j], hilbert[i][k], hilbert[k][j]);
 	       mpfi_add(SUM[i][j], SUM[i][j], MUL[i][j]);
 #else
-           mpfi_mul(ptr(MUL, i, j), ptr(A, i, k), ptr(A, k, j));
+           mpfi_mul(ptr(MUL, i, j), ptr(hilbert, i, k), ptr(hilbert, k, j));
            mpfi_add(ptr(SUM, i, j), ptr(SUM, i, j), ptr(MUL, i, j));
 #endif // MDIMARRAY
 	   }
 #ifdef MDIMARRAY
-	   mpfi_sub(A[i][j], A[i][j], SUM[i][j]);
+	   mpfi_sub(hilbert[i][j], hilbert[i][j], SUM[i][j]);
 #else
-       mpfi_sub(ptr(A, i, j), ptr(A, i, j), ptr(SUM, i, j));
+       mpfi_sub(ptr(hilbert, i, j), ptr(hilbert, i, j), ptr(SUM, i, j));
 #endif // MDIMARRAY
     //printMatrix((__mpfi_struct *)U);
 }
@@ -485,19 +417,19 @@ void Lset(int j,int i){
 */
 	   for (int k = 0; k < i; k++) {
 #ifdef MDIMARRAY
-	       mpfi_mul(MUL[j][i], A[j][k], A[k][i]);
+	       mpfi_mul(MUL[j][i], hilbert[j][k], hilbert[k][i]);
 	       mpfi_add(SUM[j][i], SUM[j][i], MUL[j][i]);
 #else
-           mpfi_mul(ptr(MUL, j, i), ptr(A, j, k), ptr(A, k, i));
+           mpfi_mul(ptr(MUL, j, i), ptr(hilbert, j, k), ptr(hilbert, k, i));
            mpfi_add(ptr(SUM, j, i), ptr(SUM, j, i), ptr(MUL, j, i));
 #endif // MDIMARRAY
 	   }
 #ifdef MDIMARRAY
-	   mpfi_sub(SUM[j][i], A[j][i], SUM[j][i]);
-	   mpfi_div(A[j][i], SUM[j][i], A[i][i]);
+	   mpfi_sub(SUM[j][i], hilbert[j][i], SUM[j][i]);
+	   mpfi_div(hilbert[j][i], SUM[j][i], hilbert[i][i]);
 #else
-       mpfi_sub(ptr(SUM, j, i), ptr(A, j, i), ptr(SUM, j, i));
-       mpfi_div(ptr(A, j, i), ptr(SUM, j, i), ptr(A, i, i));
+       mpfi_sub(ptr(SUM, j, i), ptr(hilbert, j, i), ptr(SUM, j, i));
+       mpfi_div(ptr(hilbert, j, i), ptr(SUM, j, i), ptr(hilbert, i, i));
 #endif // MDIMARRAY
     //printMatrix((__mpfi_struct *)L);
 }
@@ -511,10 +443,10 @@ void comp(void) {
     for (int i = 1; i < N; i++) {
         for (int j = 0; j <= i - 1; j++) {
 #ifdef MDIMARRAY
-            mpfi_mul(tmp, b[j], A[i][j]);
+            mpfi_mul(tmp, b[j], hilbert[i][j]);
             mpfi_sub(b[i], b[i], tmp);
 #else
-            mpfi_mul(tmp, &b[j], ptr(A, i, j));
+            mpfi_mul(tmp, &b[j], ptr(hilbert, i, j));
             mpfi_sub(&b[i], &b[i], tmp);
 #endif // MDIMARRAY
         }
@@ -524,17 +456,17 @@ void comp(void) {
     for (int i = N-1; i >= 0; i--) {
         for (int j = N-1; j > i; j--) {
 #ifdef MDIMARRAY
-            mpfi_mul(tmp, b[j], A[i][j]);
+            mpfi_mul(tmp, b[j], hilbert[i][j]);
             mpfi_sub(b[i], b[i], tmp);
 #else
-            mpfi_mul(tmp, &b[j], ptr(A, i, j));
+            mpfi_mul(tmp, &b[j], ptr(hilbert, i, j));
             mpfi_sub(&b[i], &b[i], tmp);
 #endif // MDIMARRAY
         }
 #ifdef MDIMARRAY
-        mpfi_div(b[i], b[i], A[i][i]);
+        mpfi_div(b[i], b[i], hilbert[i][i]);
 #else
-        mpfi_div(&b[i], &b[i], ptr(A, i, i));
+        mpfi_div(&b[i], &b[i], ptr(hilbert, i, i));
 #endif // MDIMARRAY
     }
 
@@ -563,9 +495,9 @@ void comp(void) {
 #endif // MDIMARRAY
         for (int j = 0; j < N; j++) {
 #ifdef MDIMARRAY
-            mpfi_clear(A[i][j]);
+            mpfi_clear(hilbert[i][j]);
 #else
-            mpfi_clear(ptr(A, i, j));
+            mpfi_clear(ptr(hilbert, i, j));
 #endif // MDIMARRAY
         }
     }
@@ -632,9 +564,9 @@ void printMatrix3(void) {
         for (int j = N-5; j < N; j++) {
             printf("(%d, %d) = ", i, j);
 #ifdef MDIMARRAY
-           printInterval((__mpfi_struct *)&(A[i][j]));
+           printInterval((__mpfi_struct *)&(hilbert[i][j]));
 #else
-           printInterval(ptr(A, i, j));
+           printInterval(ptr(hilbert, i, j));
 #endif // MDIMARRAY
         }
         printf("\n");
@@ -643,7 +575,7 @@ void printMatrix3(void) {
 
 void allocArrays(int size) {
     N = size;
-    A = (__mpfi_struct *)calloc(N * N, sizeof(__mpfi_struct));
+    hilbert = (__mpfi_struct *)calloc(N * N, sizeof(__mpfi_struct));
     b = (__mpfi_struct *)calloc(N, sizeof(__mpfi_struct));
     SUM = (__mpfi_struct *)calloc(N * N, sizeof(__mpfi_struct));
     MUL = (__mpfi_struct *)calloc(N * N, sizeof(__mpfi_struct));
