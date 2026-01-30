@@ -18,11 +18,11 @@ extern int acc;
 extern char buf[256];
 
 #ifdef MDIMARRAY
-extern mpfi_t hilbert[N][N];
+extern mpfi_t A[N][N];
 extern mpfi_t b[N];
 extern mpfi_t calc[N][N];
 #else
-extern __mpfi_struct *hilbert;
+extern __mpfi_struct *A;
 extern __mpfi_struct *b;
 extern __mpfi_struct *calc;
 #endif // MDIMARRAY
