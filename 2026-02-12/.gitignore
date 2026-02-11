@@ -1,0 +1,8 @@
+go.mod
+*.so
+*.o
+*.mtx
+main
+cmain
+cgomain
+*.dat
