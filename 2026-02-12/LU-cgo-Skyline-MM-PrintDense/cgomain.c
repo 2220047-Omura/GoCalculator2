@@ -63,15 +63,17 @@ int main(int argc, char **argv) {
 
     printf("[%s] single size=%d time=%f\n", title, size, t_diff);
 
-    // printMatrix3();
-    //printSquare();
 
     //Norm();
-
 #ifdef PRINT
-    printf("multithreaded execution\n");
+    printSquare();
+    InfoAdd();
+    InfoMul();
 #endif
 
+    printf("\n");
+
+    printf("multithreaded execution\n");
     srand(0);
     reset();
 
@@ -92,10 +94,13 @@ int main(int argc, char **argv) {
 
     printf("[%s] multi size=%d time=%f\n", title, size, t_diff);
 
-    // printMatrix3();
-
     //Norm();
-    //printSquare();
+
+#ifdef PRINT
+    printSquare();
+    InfoAdd();
+    InfoMul();
+#endif
 
     allocArrays();
 
