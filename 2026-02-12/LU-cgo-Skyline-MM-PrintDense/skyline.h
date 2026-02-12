@@ -93,6 +93,8 @@ void comp(void);
 //void Usetsk(int b,int i,int j);
 void Usetsk(int i,int j);
 
+int getS(int m);
+
 //void printM(__mpfi_struct *b);
 
 void printInterval(__mpfi_struct *b);

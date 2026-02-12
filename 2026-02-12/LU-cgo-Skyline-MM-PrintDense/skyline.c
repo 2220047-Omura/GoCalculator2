@@ -51,6 +51,7 @@ mpfi_t *MULsk;
 #ifdef COUNT
 int *countAdd;
 int *countMul;
+int *countS;
 #endif //COUNT
 
 void setMMFilename(const char *fname) {
@@ -365,6 +366,13 @@ void reset() {
     mpfi_set_str(Xsk[0], "1", 10);
     */
 #endif // DOUBLE
+
+#ifdef COUNT
+    for (int i = 0; i < E; i ++) {
+        countAdd[i] = 0;
+        countMul[i] = 0;
+    }
+#endif //COUNT
 }
 
 void Usetsk(int m, int l) {
@@ -395,7 +403,12 @@ void Usetsk(int m, int l) {
 #ifdef COUNT
     countAdd[m] += s;
     countMul[m] += s;
+    countS[m] += s;
 #endif //COUNT
+}
+
+int getS(int m) {
+    return countS[m];
 }
 
 void printInterval(__mpfi_struct *b) {
@@ -596,7 +609,7 @@ void printSquare() {
 
         // L要素の表示
         for (int n = 0; n < p - prof[Dia[a]]; n++) {
-            printf("%f ",0);
+            printf("%f ",0.0);
         }
         int m = p - prof[Dia[a]];
         if (m < 0) {
@@ -614,7 +627,7 @@ void printSquare() {
             if (isk[n] == a) {
                 j = jsk[n];
                 for (int m = 0; m < j - predj; m++) {
-                    printf("%f ",0);
+                    printf("%f ",0.0);
                 }
                 printf("%f ",Ask[n]);
                 predj = j + 1;

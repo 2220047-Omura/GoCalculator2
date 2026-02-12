@@ -15,6 +15,8 @@ import (
 )
 
 var E int
+var sgo int
+
 //export defE
 func defE(e int) {
 	E = e
@@ -41,9 +43,12 @@ func forkjoin(a int, l int) {
 		if isk[m] == a {
 			wg.Add(1)
 			go UcallWG(m, l)
+			sgo += 1
 		}
 	}
 	wg.Wait()
+	fmt.Println("row:",a, "S:",sgo)
+	sgo = 0
 }
 
 func main() {
