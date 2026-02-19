@@ -72,9 +72,15 @@ int main(int argc, char **argv) {
 	reset();
 
 	clock_gettime(CLOCK_REALTIME, &ts_start);
+#ifdef COUNT
+	for (int k = 0; k < N; k++) {
+		forkjoinCount(k, N);
+	}
+#else
 	for (int k = 0; k < N; k++) {
 		forkjoin(k, N);
 	}
+#endif
     clock_gettime(CLOCK_REALTIME, &ts_stop);
 	t_diff = (ts_stop.tv_sec - ts_start.tv_sec) + (ts_stop.tv_nsec - ts_start.tv_nsec) / 1000000000.0;
     printf("[%s] multi N=%d time=%f\n", title, N, t_diff);
