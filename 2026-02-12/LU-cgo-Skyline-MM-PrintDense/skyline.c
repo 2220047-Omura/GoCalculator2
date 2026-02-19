@@ -8,8 +8,8 @@
 
 #include "skyline.h"
 
-#define DOUBLE
-#define COUNT
+//#define DOUBLE
+//#define COUNT
 
 int n;
 int E; // Number of Elements
@@ -24,7 +24,7 @@ int *Dia = NULL;  // Diagonal. Dia[n]に行(列)番号nの対角要素がAskの�
 int *isk = NULL;  // isk[n]にnの行番号を格納
 int *jsk = NULL;  // isk[n]にnの列番号を格納
 int *prof = NULL; // profile. prof[n]にnの上に非ゼロ要素が何個あるかを格納
-int *arrM;
+int *arrM; 
 
 #ifdef DOUBLE
 double *Ask;
@@ -332,7 +332,7 @@ void setMM() {
             Ask[k] = tmp[n].val;
 #else
             mpfr_set_d(a, tmp[n].val, MPFR_RNDN);
-            mpfi_interv_fr(Ask[k], a, a);
+            mpfi_interv_fr(Ask[k], a, a); 
             // mpfi_interv_fr(Ask2[k], a, a);
 #endif // DOUBLE
             isk[k] = tmp[n].row;
@@ -436,18 +436,32 @@ void Usetsk(int m, int l) {
     countMul[m] += s;
     countS[isk[m]] += s;
     countS2[isk[m]] += s*s;
+    
     if (isk[m] == 1) {
         printf("s :%d\n", s);
     }
+    
 #endif //COUNT
 }
 
 int getS(int m) {
+#ifdef COUNT
     return countS[m];
+#else
+    return 0;
+#endif
 }
 
 int getS2(int m) {
+#ifdef COUNT
     return countS2[m];
+#else
+    return 0;
+#endif
+}
+
+int getLength (int m, int l) {
+    return (prof[m] < prof[l]) ? prof[m] : prof[l];
 }
 
 void cleanCountS() {

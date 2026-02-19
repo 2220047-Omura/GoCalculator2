@@ -27,9 +27,18 @@ func defE(e int) {
 
 var isk []int
 
+var prof []int
+
+var Dia []int
+
 //export makeIsk
 func makeIsk(n int) {
 	isk = append(isk, n)
+}
+
+//export makeProf
+func makeProf(n int) {
+	prof = append(prof, n)
 }
 
 var wg sync.WaitGroup
@@ -41,10 +50,9 @@ func UcallWG(m int, l int) {
 
 //export forkjoinCount
 func forkjoinCount(a int, l int) {
-	C.cleanCountS()
+	//C.cleanCountS()
 	for m := l; m < E; m++ {
 		if isk[m] == a {
-
 			profM := C.getprof(C.int(m))
 			profL := C.getprof(C.int(l))
 			s = min(int(profM), int(profL))
@@ -52,27 +60,48 @@ func forkjoinCount(a int, l int) {
 				//wg.Add(1)
 				//go UcallWG(m, l)
 				C.Usetsk(C.int(m), C.int(l))
-				Ngo += 1
+				//Ngo += 1
 			}
-
 			//C.Usetsk(C.int(m),C.int(l))
 			//Ngo += 1
 		}
 	}
-	//wg.Wait()
+	wg.Wait()
 	sum := C.getS(C.int(a))
 	sumSQ := C.getS2(C.int(a))
 	//fmt.Println("row:", a, "S:", sgo, "cgo:", cgo, "cgo2:",cgo2)
 	fmt.Println("row:", a, "Ngo:", Ngo, "ave:", float64(sum)/float64(Ngo), "var:", (float64(sumSQ)/float64(Ngo))-(float64(sum)/float64(Ngo))*(float64(sum)/float64(Ngo)))
-	Ngo = 0
+	//Ngo = 0
 }
 
 //export forkjoin
-func forkjoin(a int, l int) {
-	for m := l; m < E; m++ {
+func forkjoin(a int, l int, E2 int) {
+	for m := l; m < E2; m++ {
 		if isk[m] == a {
 			wg.Add(1)
 			go UcallWG(m, l)
+		}
+	}
+	wg.Wait()
+}
+
+var profM int
+var profL int
+
+//export forkjoin2
+func forkjoin2(a int, l int, E2 int) {
+
+	for m := l; m < E2; m++ {
+		if isk[m] == a {
+			//profM := C.getprof(C.int(m))
+			//profL := C.getprof(C.int(l))
+			//profM = prof[m]
+			//profL = prof[l]
+			//s = min(int(profM), int(profL))
+			if (int(C.getLength(C.int(m), C.int(l))) != 0) {
+				wg.Add(1)
+				go UcallWG(m, l)
+			}
 		}
 	}
 	wg.Wait()

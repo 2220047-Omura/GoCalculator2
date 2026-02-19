@@ -12,8 +12,8 @@
 //void printInterval(__mpfi_struct *b);
 //void comp(void);
 
-#define DOUBLE
-#define COUNT
+//#define DOUBLE
+//#define COUNT
 
 extern int size;     // 行列サイズ（列数）
 extern int *Dia;     // 動的配列
@@ -97,6 +97,8 @@ void Usetsk(int i,int j);
 
 int getS(int m);
 int getS2(int m);
+
+int getLength(int m, int l);
 
 void cleanCountS(void);
 

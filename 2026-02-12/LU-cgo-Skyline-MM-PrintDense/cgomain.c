@@ -7,7 +7,7 @@
 #include "libcgoskyline.h"
 
 #define PRINT
-#define COUNT
+//#define COUNT
 
 int main(int argc, char **argv) {
 
@@ -79,11 +79,15 @@ int main(int argc, char **argv) {
     reset();
 
     defE(E);
+
+    int E2;
+    clock_gettime(CLOCK_REALTIME, &ts_start);
     for (int i = 0; i < E; i ++) {
         makeIsk(isk[i]);
+        //makeProf(prof[i]);
     }
 
-    clock_gettime(CLOCK_REALTIME, &ts_start);
+    //clock_gettime(CLOCK_REALTIME, &ts_start);
 #ifdef COUNT
     for (int a = 1; a < size; a++) {
         l = Dia[a];
@@ -92,7 +96,10 @@ int main(int argc, char **argv) {
 #else
     for (int a = 1; a < size; a++) {
         l = Dia[a];
-        forkjoin(a, l);
+        E2 = (size <= a + MAXp) ? E : Dia[a + MAXp];
+        forkjoin(a, l, E2);
+        //printf("a, MAXp, Dia = %d,%d,%d\n", a, MAXp, Dia[a + MAXp]);
+        //forkjoin2(a, l, E2);
     }
 #endif //COUNT
 
