@@ -8,8 +8,8 @@
 
 #include "skyline.h"
 
-#define DOUBLE
-#define COUNT
+//#define DOUBLE
+//#define COUNT
 
 int n;
 int E; // Number of Elements
@@ -116,8 +116,13 @@ void getNnz(void) {
     for (int k = 0; k < nnz; k++) {
         fgets(line, sizeof(line), fp);
         sscanf(line, "%d %d %lf", &i, &j, &val);
-        tmp[k].row = i - 1; /* 0 始まり */
-        tmp[k].col = j - 1;
+        if (i > j) {
+            tmp[k].col = i - 1; /* 0 始まり */
+            tmp[k].row = j - 1;
+        }else{
+            tmp[k].row = i - 1; /* 0 始まり */
+            tmp[k].col = j - 1;
+        }
     }
 
     qsort(tmp, nnz, sizeof(Entry2), cmp_col_major2);
@@ -247,14 +252,37 @@ void setMM() {
     Entry *tmp = malloc(nnz * sizeof(Entry));
 
     // printf("in setMM\n");
+    /*
     for (int n = 0; n < nnz; n++) {
         int i, j;
         double val;
         fgets(line, sizeof(line), fp);
         sscanf(line, "%d %d %lf", &i, &j, &val);
         //printf("n, i, j = %d,%d,%d\n",n,i-1,j-1);
-        tmp[n].row = i - 1; /* 0 始まり */
-        tmp[n].col = j - 1;
+        if (i > j) {
+            tmp[n].col = i - 1; 
+            tmp[n].row = j - 1;
+        }else{
+            tmp[n].row = i - 1; 
+            tmp[n].col = j - 1;
+        }
+        tmp[n].val = val;
+        //("%lf\n",val);
+    }
+    */
+    int i, j;
+    for (int n = 0; n < nnz; n++) {
+        double val;
+        fgets(line, sizeof(line), fp);
+        sscanf(line, "%d %d %lf", &i, &j, &val);
+        //printf("n, i, j = %d, %d, %d\n",n, i, j);
+        if (i > j) {
+            tmp[n].col = i - 1; /* 0 始まり */
+            tmp[n].row = j - 1;
+        }else{
+            tmp[n].row = i - 1; /* 0 始まり */
+            tmp[n].col = j - 1;
+        }
         tmp[n].val = val;
         //("%lf\n",val);
     }
@@ -314,6 +342,7 @@ void setMM() {
             prof[k] = p;
             p++;
             if (tmp[n].row == tmp[n].col) {
+                //printf("n, row, col = %d, %d, %d\n", n, tmp[n].row, tmp[n].col);
                 cnt++;
                 Dia[m] = k;
                 if (MAXp < p) {

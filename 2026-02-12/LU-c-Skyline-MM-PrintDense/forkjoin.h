@@ -18,6 +18,6 @@ void LcallWG(int j, int i);
 void forkjoin(int i, int N);
 */
 //void forkjoin(int a, int c, int isk);
-void forkjoin(int a, int l);
+void forkjoin(int a, int l, int E2);
 
 #endif // _FORKJOIN_

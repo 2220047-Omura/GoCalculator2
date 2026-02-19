@@ -80,10 +80,13 @@ int main(int argc, char **argv) {
     srand(0);
     reset();
 
+    int E2;
+
     clock_gettime(CLOCK_REALTIME, &ts_start);
     for (int a = 1; a < size; a++) {
         l = Dia[a];
-        forkjoin(a, l);
+        E2 = (size <= a + MAXp) ? E : Dia[a + MAXp];
+        forkjoin(a, l, E2);
     }
 
     clock_gettime(CLOCK_REALTIME, &ts_stop);

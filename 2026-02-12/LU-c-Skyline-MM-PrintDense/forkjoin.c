@@ -60,9 +60,9 @@ void forkjoin(int a, int c, int isk) {
 }
 */
 
-void forkjoin(int a, int l){
+void forkjoin(int a, int l, int E2){
 	int i = 0;
-	for (int m = l; m < E; m++){
+	for (int m = l; m < E2; m++){
 		if (isk[m] == a){
 			//Usetsk(m, l);
 			arrM[i] = m;
