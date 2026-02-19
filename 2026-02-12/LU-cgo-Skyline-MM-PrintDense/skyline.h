@@ -55,6 +55,8 @@ extern mpfi_t *MULsk;
 #ifdef COUNT
 extern int *countAdd;
 extern int *countMul;
+extern int *counS;
+extern int *counS2;
 #endif //COUNT
 
 void setMMFilename(const char *fname);
@@ -94,6 +96,11 @@ void comp(void);
 void Usetsk(int i,int j);
 
 int getS(int m);
+int getS2(int m);
+
+void cleanCountS(void);
+
+int getprof(int m);
 
 //void printM(__mpfi_struct *b);
 

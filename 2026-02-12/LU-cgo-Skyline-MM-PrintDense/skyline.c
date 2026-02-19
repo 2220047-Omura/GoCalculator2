@@ -52,6 +52,7 @@ mpfi_t *MULsk;
 int *countAdd;
 int *countMul;
 int *countS;
+int *countS2;
 #endif //COUNT
 
 void setMMFilename(const char *fname) {
@@ -117,8 +118,13 @@ void getNnz(void) {
     for (int k = 0; k < nnz; k++) {
         fgets(line, sizeof(line), fp);
         sscanf(line, "%d %d %lf", &i, &j, &val);
-        tmp[k].row = i - 1; /* 0 始まり */
-        tmp[k].col = j - 1;
+        if (i > j) {
+            tmp[k].col = i - 1; /* 0 始まり */
+            tmp[k].row = j - 1;
+        }else{
+            tmp[k].row = i - 1; /* 0 始まり */
+            tmp[k].col = j - 1;
+        }
     }
 
     qsort(tmp, nnz, sizeof(Entry2), cmp_col_major2);
@@ -190,6 +196,8 @@ int init(void) {
 #ifdef COUNT
     countAdd = (int *)calloc(E, sizeof(int));
     countMul = (int *)calloc(E, sizeof(int));
+    countS = (int *)calloc(size, sizeof(int));
+    countS2 = (int *)calloc(size, sizeof(int));
 #endif // COUNT
 
     return 0;
@@ -247,6 +255,7 @@ void setMM() {
     /* この列の非ゼロ要素を一時保存 */
     Entry *tmp = malloc(nnz * sizeof(Entry));
 
+    /*
     // printf("in setMM\n");
     for (int n = 0; n < nnz; n++) {
         int i, j;
@@ -254,8 +263,25 @@ void setMM() {
         fgets(line, sizeof(line), fp);
         sscanf(line, "%d %d %lf", &i, &j, &val);
         //printf("n, i, j = %d,%d,%d\n",n,i-1,j-1);
-        tmp[n].row = i - 1; /* 0 始まり */
+        tmp[n].row = i - 1;
         tmp[n].col = j - 1;
+        tmp[n].val = val;
+        //("%lf\n",val);
+    }
+    */
+
+    int i, j;
+    for (int n = 0; n < nnz; n++) {
+        double val;
+        fgets(line, sizeof(line), fp);
+        sscanf(line, "%d %d %lf", &i, &j, &val);
+        if (i > j) {
+            tmp[n].col = i - 1; /* 0 始まり */
+            tmp[n].row = j - 1;
+        }else{
+            tmp[n].row = i - 1; /* 0 始まり */
+            tmp[n].col = j - 1;
+        }
         tmp[n].val = val;
         //("%lf\n",val);
     }
@@ -368,6 +394,10 @@ void reset() {
 #endif // DOUBLE
 
 #ifdef COUNT
+    for (int i = 0; i < size; i ++) {
+        countS[i] = 0;
+        countS2[i] = 0;
+    }
     for (int i = 0; i < E; i ++) {
         countAdd[i] = 0;
         countMul[i] = 0;
@@ -376,12 +406,13 @@ void reset() {
 }
 
 void Usetsk(int m, int l) {
-    int s;
-    if (prof[m] < prof[l]) {
-        s = prof[m];
-    } else {
-        s = prof[l];
+    int s = (prof[m] < prof[l]) ? prof[m] : prof[l];
+
+    
+    if (s == 0) {
+        return;
     }
+    
 
 #ifdef DOUBLE
     for (int k = 0; k < s; k++) {
@@ -403,12 +434,33 @@ void Usetsk(int m, int l) {
 #ifdef COUNT
     countAdd[m] += s;
     countMul[m] += s;
-    countS[m] += s;
+    countS[isk[m]] += s;
+    countS2[isk[m]] += s*s;
+    if (isk[m] == 1) {
+        printf("s :%d\n", s);
+    }
 #endif //COUNT
 }
 
 int getS(int m) {
     return countS[m];
+}
+
+int getS2(int m) {
+    return countS2[m];
+}
+
+void cleanCountS() {
+#ifdef COUNT
+    for (int i = 0; i < size; i ++) {
+        countS[i] = 0;
+        countS2[i] = 0;
+    }
+#endif //COUNT
+}
+
+int getprof(int m) {
+    return prof[m];
 }
 
 void printInterval(__mpfi_struct *b) {

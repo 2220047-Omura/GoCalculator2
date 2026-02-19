@@ -86,6 +86,7 @@ extern "C" {
 
 extern void defE(GoInt e);
 extern void makeIsk(GoInt n);
+extern void forkjoinCount(GoInt a, GoInt l);
 extern void forkjoin(GoInt a, GoInt l);
 
 #ifdef __cplusplus

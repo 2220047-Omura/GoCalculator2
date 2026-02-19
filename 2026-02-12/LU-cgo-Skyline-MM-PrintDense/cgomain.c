@@ -7,6 +7,7 @@
 #include "libcgoskyline.h"
 
 #define PRINT
+#define COUNT
 
 int main(int argc, char **argv) {
 
@@ -83,10 +84,17 @@ int main(int argc, char **argv) {
     }
 
     clock_gettime(CLOCK_REALTIME, &ts_start);
+#ifdef COUNT
+    for (int a = 1; a < size; a++) {
+        l = Dia[a];
+        forkjoinCount(a, l);
+    }
+#else
     for (int a = 1; a < size; a++) {
         l = Dia[a];
         forkjoin(a, l);
     }
+#endif //COUNT
 
     clock_gettime(CLOCK_REALTIME, &ts_stop);
     t_diff = (ts_stop.tv_sec - ts_start.tv_sec)
