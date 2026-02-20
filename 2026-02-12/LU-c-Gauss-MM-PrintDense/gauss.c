@@ -14,8 +14,8 @@ static const char *mm_filename = NULL;
 //void printInterval(__mpfi_struct *b);
 //void comp(void);
 
-#define DOUBLE
-#define COUNT
+//#define DOUBLE
+//#define COUNT
 
 int N;
 #define ptr(p, i, j) (&(p[(i) * N + (j)]))
@@ -236,7 +236,7 @@ void reset(){
         }
     }
 #else
-    mpfi_set_str(&b[0], "1", 10);b[0] = 1;
+    mpfi_set_str(&b[0], "1", 10);
     for (int i = 1; i < N; i++) {
         mpfi_set_str(&b[i], "0", 10);
     }
