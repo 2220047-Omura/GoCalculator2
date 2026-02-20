@@ -43,14 +43,18 @@ int main(int argc, char **argv) {
     int E = getN();
     printf("E=%d\n",E);
     int l;
+    int E2;
 
 	//printMatrix3();
 
+    
     clock_gettime(CLOCK_REALTIME, &ts_start);
     for (int a = 1; a < size; a++) {
         l = Dia[a];
+        E2 = (size <= a + MAXp) ? E : Dia[a + MAXp];
+        forkjoin(a, l, E2);
         //printf("a, l = %d, %d\n",a,l);
-        for (int m = l; m < E; m++){
+        for (int m = l; m < E2; m++){
 		    if (isk[m] == a){
                 //printf("m, l = %d, %d\n",m,l);
 			    Usetsk(m, l);
@@ -63,15 +67,15 @@ int main(int argc, char **argv) {
            + (ts_stop.tv_nsec - ts_start.tv_nsec) / 1e9;
 
     printf("[%s] single size=%d time=%f\n", title, size, t_diff);
-
+    
     // printMatrix3();
 
     //Norm();
 
 #ifdef PRINT
     printSquare();
-    InfoAdd();
-    InfoMul();
+    //InfoAdd();
+    //InfoMul();
 #endif
 
     printf("\n");
@@ -79,8 +83,6 @@ int main(int argc, char **argv) {
     printf("multithreaded execution\n");
     srand(0);
     reset();
-
-    int E2;
 
     clock_gettime(CLOCK_REALTIME, &ts_start);
     for (int a = 1; a < size; a++) {
@@ -101,8 +103,8 @@ int main(int argc, char **argv) {
 
 #ifdef PRINT
     printSquare();
-    InfoAdd();
-    InfoMul();
+    //InfoAdd();
+    //InfoMul();
 #endif
 
     allocArrays();
