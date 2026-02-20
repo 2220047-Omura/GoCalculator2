@@ -53,6 +53,7 @@ func forkjoinCount(a int, l int) {
 	//C.cleanCountS()
 	for m := l; m < E; m++ {
 		if isk[m] == a {
+			/*
 			profM := C.getprof(C.int(m))
 			profL := C.getprof(C.int(l))
 			s = min(int(profM), int(profL))
@@ -62,8 +63,9 @@ func forkjoinCount(a int, l int) {
 				C.Usetsk(C.int(m), C.int(l))
 				Ngo += 1
 			}
-			//C.Usetsk(C.int(m),C.int(l))
-			//Ngo += 1
+			*/
+			C.Usetsk(C.int(m),C.int(l))
+			Ngo += 1
 		}
 	}
 	wg.Wait()
@@ -72,7 +74,7 @@ func forkjoinCount(a int, l int) {
 	//fmt.Println("row:", a, "S:", sgo, "cgo:", cgo, "cgo2:",cgo2)
 	//fmt.Println("row:", a, "Ngo:", Ngo, "ave:", float64(sum)/float64(Ngo), "var:", (float64(sumSQ)/float64(Ngo))-(float64(sum)/float64(Ngo))*(float64(sum)/float64(Ngo)))
 	fmt.Println(a, ", ", Ngo, ", ", float64(sum)/float64(Ngo), ", ", (float64(sumSQ)/float64(Ngo))-(float64(sum)/float64(Ngo))*(float64(sum)/float64(Ngo)))
-	//Ngo = 0
+	Ngo = 0
 }
 
 //export forkjoin
