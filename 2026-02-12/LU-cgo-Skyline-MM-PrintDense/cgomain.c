@@ -22,16 +22,9 @@ int main(int argc, char **argv) {
 
     char title[] = "skyline";
 
-#ifdef PRINT
-    //printf("[%s] size=%d\n", title, size);
-#endif
-
     struct timespec ts_start, ts_stop;
     double t_diff;
 
-#ifdef PRINT
-    printf("single thread execution\n");
-#endif
 
     srand(0);
 
@@ -43,7 +36,22 @@ int main(int argc, char **argv) {
     printf("E=%d\n",E);
     int l;
 
+#ifdef PRINT
+    printf("[%s] size=%d\n", title, size);
+#ifdef COUNT
+    printf("[COUNT]\n");
+#endif //COUNT
+#ifdef DOUBLE
+    printf("[DOUBLE]\n");
+#else
+    printf("[MPFI]\n");
+#endif //DOUBLE
+#endif //PRINT
+
 	//printMatrix3();
+#ifdef PRINT
+    printf("single thread execution\n");
+#endif
 
     clock_gettime(CLOCK_REALTIME, &ts_start);
     /*
@@ -67,7 +75,7 @@ int main(int argc, char **argv) {
 
     //Norm();
 #ifdef PRINT
-    //printSquare();
+    printSquare();
     //InfoAdd();
     //InfoMul();
 #endif
@@ -114,7 +122,7 @@ int main(int argc, char **argv) {
     //Norm();
 
 #ifdef PRINT
-    //printSquare();
+    printSquare();
     //InfoAdd();
     //InfoMul();
 #endif
