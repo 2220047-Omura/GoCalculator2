@@ -436,11 +436,11 @@ void Usetsk(int m, int l) {
     countMul[m] += s;
     countS[isk[m]] += s;
     countS2[isk[m]] += s*s;
-    
+    /*
     if (isk[m] == 1) {
         printf("s :%d\n", s);
     }
-    
+    */
 #endif //COUNT
 }
 

@@ -6,7 +6,7 @@
 #include "skyline.h"
 #include "libcgoskyline.h"
 
-#define PRINT
+//#define PRINT
 //#define COUNT
 
 int main(int argc, char **argv) {
@@ -23,7 +23,7 @@ int main(int argc, char **argv) {
     char title[] = "skyline";
 
 #ifdef PRINT
-    printf("[%s] size=%d\n", title, size);
+    //printf("[%s] size=%d\n", title, size);
 #endif
 
     struct timespec ts_start, ts_stop;
@@ -62,14 +62,14 @@ int main(int argc, char **argv) {
     t_diff = (ts_stop.tv_sec - ts_start.tv_sec)
            + (ts_stop.tv_nsec - ts_start.tv_nsec) / 1e9;
 
-    printf("[%s] single size=%d time=%f\n", title, size, t_diff);
+    //printf("[%s] single size=%d time=%f\n", title, size, t_diff);
 
 
     //Norm();
 #ifdef PRINT
-    printSquare();
-    InfoAdd();
-    InfoMul();
+    //printSquare();
+    //InfoAdd();
+    //InfoMul();
 #endif
 
     printf("\n");
@@ -81,6 +81,8 @@ int main(int argc, char **argv) {
     defE(E);
 
     int E2;
+    printf("row, Ngo, ave, var\n");
+
     clock_gettime(CLOCK_REALTIME, &ts_start);
     for (int i = 0; i < E; i ++) {
         makeIsk(isk[i]);
@@ -112,9 +114,9 @@ int main(int argc, char **argv) {
     //Norm();
 
 #ifdef PRINT
-    printSquare();
-    InfoAdd();
-    InfoMul();
+    //printSquare();
+    //InfoAdd();
+    //InfoMul();
 #endif
 
     allocArrays();

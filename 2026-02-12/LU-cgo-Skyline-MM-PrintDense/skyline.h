@@ -12,8 +12,9 @@
 //void printInterval(__mpfi_struct *b);
 //void comp(void);
 
-//#define DOUBLE
-//#define COUNT
+#define DOUBLE
+#define COUNT
+#define PRINT
 
 extern int size;     // 行列サイズ（列数）
 extern int *Dia;     // 動的配列
