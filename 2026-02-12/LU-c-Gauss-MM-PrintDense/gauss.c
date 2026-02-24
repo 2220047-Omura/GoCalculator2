@@ -6,6 +6,7 @@
 #include <mpfi_io.h>
 //#include <mpfr.h>
 #include <float.h>
+#include <math.h>
 
 #include "gauss.h"
 
@@ -27,10 +28,12 @@ bool boolsk = true;
 double *A;
 double *b;
 double *calc;
+double *A2;
 #else
 __mpfi_struct *A;
 __mpfi_struct *b;
 __mpfi_struct *calc;
+__mpfi_struct *A2;
 #endif // DOUBLE
 
 #ifdef COUNT
@@ -86,7 +89,7 @@ void printMatrix(__mpfi_struct *array) {
 */
 int init(void) {
     getN();
-    printf("N = %d\n",N);
+    //printf("N = %d\n",N);
 /*
 #ifdef DOUBLE
     double a;
@@ -101,10 +104,12 @@ int init(void) {
     A = (double *)calloc(N * N, sizeof(double));
     b = (double *)calloc(N, sizeof(double));
     calc = (double *)calloc(N * N, sizeof(double));
+    A2 = (double *)calloc(N * N, sizeof(double));
 #else
     A = (__mpfi_struct *)malloc(N * N * sizeof(__mpfi_struct));
     b = (__mpfi_struct *)malloc(N * sizeof(__mpfi_struct));
     calc = (__mpfi_struct *)malloc(N * N * sizeof(__mpfi_struct));
+    A2 = (__mpfi_struct *)malloc(N * N * sizeof(__mpfi_struct));
 #endif // DOUBLE
 
 #ifdef COUNT
@@ -122,6 +127,7 @@ int init(void) {
 #ifdef DOUBLE
 #else
             mpfi_init2(ptr(A, i, j), acc);
+            mpfi_init2(ptr(A2, i, j), acc);
             mpfi_init2(ptr(calc, i, j), acc);
 #endif // DOUBLE
         }
@@ -130,20 +136,22 @@ int init(void) {
         for (int j = 0; j < N; j++) {
 #ifdef DOUBLE
         *ptr(A,i,j) = 0;
+        *ptr(A2,i,j) = 0;
 #else
         mpfi_set_str(ptr(A,i,j), "0", 10);
+        mpfi_set_str(ptr(A2,i,j), "0", 10);
 #endif // DOUBLE
         }
     }
 	return 0;
 }
 
-typedef struct
-{
-    int row;
-    int col;
-    double val;
-} Entry;
+// typedef struct
+// {
+//     int row;
+//     int col;
+//     double val;
+// } Entry;
 
 void setMM() {
 #ifdef DOUBLE
@@ -180,7 +188,7 @@ void setMM() {
     }
 
     /* この列の非ゼロ要素を一時保存 */
-    Entry *tmp = malloc(nnz * sizeof(Entry));
+    //Entry *tmp = malloc(nnz * sizeof(Entry));
 
     // printf("in setMM\n");
     for (int n = 0; n < nnz; n++)
@@ -189,21 +197,35 @@ void setMM() {
         double val;
         fgets(line, sizeof(line), fp);
         sscanf(line, "%d %d %lf", &i, &j, &val);
-        //printf("n, i, j = %d,%d,%d\n",n,i-1,j-1);
-        tmp[n].row = i - 1; /* 0 始まり */
-        tmp[n].col = j - 1;
-        tmp[n].val = val;
-        //("%lf\n",val);
+#ifdef DOUBLE
+        *ptr(A, i-1, j-1) = val;
+        *ptr(A, j-1, i-1) = val;
+        *ptr(A2, i-1, j-1) = val;
+        *ptr(A2, j-1, i-1) = val;
+#else
+        mpfr_set_d(a, val, MPFR_RNDN);
+        mpfi_interv_fr(ptr(A, i-1, j-1), a, a);
+        mpfi_interv_fr(ptr(A, j-1, i-1), a, a);
+        mpfi_interv_fr(ptr(A2, i-1, j-1), a, a);
+        mpfi_interv_fr(ptr(A2, j-1, i-1), a, a);
+#endif //DOUBLE
+        ////printf("n, i, j = %d,%d,%d\n",n,i-1,j-1);
+        // tmp[n].row = i - 1; /* 0 始まり */
+        // tmp[n].col = j - 1;
+        // tmp[n].val = val;
+        ////("%lf\n",val);
     }
 
-    for (int n = 0; n < nnz; n++) {
-#ifdef DOUBLE
-        *ptr(A,tmp[n].col,tmp[n].row) = tmp[n].val;
-#else
-        mpfr_set_d(a, tmp[n].val, MPFR_RNDN);
-        mpfi_interv_fr(ptr(A, tmp[n].col, tmp[n].row), a, a);
-#endif // DOUBLE
-    }
+//     for (int n = 0; n < nnz; n++) {
+// #ifdef DOUBLE
+//         *ptr(A,tmp[n].row,tmp[n].col) = tmp[n].val;
+//         *ptr(A2,tmp[n].row,tmp[n].col) = tmp[n].val;
+// #else
+//         mpfr_set_d(a, tmp[n].val, MPFR_RNDN);
+//         mpfi_interv_fr(ptr(A, tmp[n].row, tmp[n].col), a, a);
+//         mpfi_interv_fr(ptr(A2, tmp[n].row, tmp[n].col), a, a);
+// #endif // DOUBLE
+//     }
     /*
     for (int n = 0; n < nnz; n++) {
         if (tmp[n].row <= tmp[n].col) {
@@ -347,6 +369,7 @@ void comp(void) {
     }
 }
 */
+
 void printInterval(__mpfi_struct *b) {
     char buf[256];
     mpfr_exp_t exp;
@@ -357,7 +380,6 @@ void printInterval(__mpfi_struct *b) {
     mpfr_get_str(buf, &exp, 10, 15,
         &(b->right), MPFR_RNDU);
     printf("%sx(%d)]\n", buf, (int)exp);
-
 }
 
 void printMatrix3(void) {
@@ -373,6 +395,78 @@ void printMatrix3(void) {
         printf("\n");
     }
 }
+
+void Norm() {
+    int kLim;
+#ifdef DOUBLE
+    double L;
+    double b;
+    double c;
+    double sub;
+    double norm = 0.0;
+
+    for (int i = 0; i < N; i++) {
+        for (int j = 0; j < N; j++) {
+            //printf("about %d,%d\n",i,j);
+            kLim  = (i <= j) ? i : j;
+            for (int k = 0; k <= kLim; k++) {
+                L = (*ptr(A, k, i)) / (*ptr(A, k, k));
+                b = L * (*ptr(A, k, j));
+                //printf("L[%d][%d] * U[%d][%d] = %f * %f\n",i, k, k, j, L,(*ptr(A,k,j)));
+                c += b;
+            }
+            sub = *ptr(A2, i, j) - c;
+            norm += (sub*sub);
+            c = 0;
+        }
+    }
+    norm = sqrt(norm);
+    printf("Norm : %f\n", norm);
+    norm = 0;
+
+#else
+    mpfi_t L;
+    mpfi_t b;
+    mpfi_t c;
+    mpfi_t sub;
+    mpfi_t norm;
+    mpfi_init2(L, acc);
+    mpfi_init2(b, acc);
+    mpfi_init2(c, acc);
+    mpfi_init2(sub, acc);
+    mpfi_init2(norm, acc);
+
+    mpfi_set_str(L, "0", 10);
+    mpfi_set_str(b, "0", 10);
+    mpfi_set_str(c, "0", 10);
+    mpfi_set_str(sub, "0", 10);
+    mpfi_set_str(norm, "0", 10);
+
+    for (int i = 0; i < N; i++) {
+        for (int j = 0; j < N; j++) {
+            kLim  = (i <= j) ? i : j;
+            printf("about %d,%d\n",i,j);
+            for (int k = 0; k <= kLim; k++) {
+                mpfi_div(L, ptr(A, k, i), ptr(A, k, k));
+                printf("L[%d][%d] * U[%d][%d] =\n",i, k, k, j);
+                printInterval(&L[0]);
+                printInterval(ptr(A, k, j));
+                mpfi_mul(b, L, ptr(A, k, j));
+                mpfi_add(c, c, b);
+            }
+            mpfi_sub(sub, ptr(A2, i, j), c);
+            mpfi_mul(sub, sub, sub);
+            mpfi_add(norm, norm, sub);
+            mpfi_set_str(c, "0", 10);
+        }
+    }
+    mpfi_sqrt(norm, norm);
+    printf("Norm : ");
+    printInterval(&norm[0]);
+    mpfi_set_str(norm, "0", 10);
+#endif //DOUBLE
+}
+
 
 void InfoSub(void) {
 #ifdef COUNT
