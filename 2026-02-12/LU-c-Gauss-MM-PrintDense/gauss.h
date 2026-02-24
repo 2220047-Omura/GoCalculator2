@@ -13,8 +13,8 @@
 //void comp(void);
 
 extern int N;
-#define DOUBLE
-#define COUNT
+//#define DOUBLE
+//#define COUNT
 
 #define ptr(p, i, j) (&(p[(i) * N + (j)]))
 // extern int acc = 1024;
@@ -64,6 +64,8 @@ void printMatrix3(void);
 void InfoSub(void);
 
 void InfoMul(void);
+
+void Norm(void);
 
 void allocArrays(int size);
 

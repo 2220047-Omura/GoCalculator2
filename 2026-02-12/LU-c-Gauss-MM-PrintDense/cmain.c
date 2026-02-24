@@ -45,9 +45,9 @@ int main(int argc, char **argv) {
     /* skyline 初期化 */
 	reset();
 	
-    printf("N=%d\n",N);
+    //printf("N=%d\n",N);
 
-   //printMatrix3();
+    printMatrix3();
 	
 	clock_gettime(CLOCK_REALTIME, &ts_start);
 	for (int k = 0; k < N; k++) {
@@ -62,9 +62,10 @@ int main(int argc, char **argv) {
 
 #ifdef PRINT
     // printMatrix();
-	//printMatrix3();
-	InfoSub();
-	InfoMul();
+	printMatrix3();
+	//InfoSub();
+	//InfoMul();
+	Norm();
 #endif
 
 	printf("\n");
@@ -86,8 +87,9 @@ int main(int argc, char **argv) {
 #ifdef PRINT
     // printMatrix();
 	//printMatrix3();
-	InfoSub();
-	InfoMul();
+	//InfoSub();
+	//InfoMul();
+	Norm();
 #endif // PRINT
 
 	return 0;
