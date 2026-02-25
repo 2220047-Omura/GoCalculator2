@@ -395,7 +395,7 @@ void printMatrix3(void) {
         printf("\n");
     }
 }
-
+/*
 void Norm() {
     int kLim;
 #ifdef DOUBLE
@@ -428,13 +428,15 @@ void Norm() {
     mpfi_t L;
     mpfi_t b;
     mpfi_t c;
-    mpfi_t sub;
+    mpfi_t sum;
     mpfi_t norm;
+    mpfi_t tmp;
     mpfi_init2(L, acc);
     mpfi_init2(b, acc);
     mpfi_init2(c, acc);
     mpfi_init2(sub, acc);
     mpfi_init2(norm, acc);
+    mpfi_init2(tmp, acc);
 
     mpfi_set_str(L, "0", 10);
     mpfi_set_str(b, "0", 10);
@@ -445,28 +447,206 @@ void Norm() {
     for (int i = 0; i < N; i++) {
         for (int j = 0; j < N; j++) {
             kLim  = (i <= j) ? i : j;
-            printf("about %d,%d\n",i,j);
+            //printf("about %d,%d\n",i,j);
             for (int k = 0; k <= kLim; k++) {
                 mpfi_div(L, ptr(A, k, i), ptr(A, k, k));
-                printf("L[%d][%d] * U[%d][%d] =\n",i, k, k, j);
-                printInterval(&L[0]);
-                printInterval(ptr(A, k, j));
+                //printf("L[%d][%d] * U[%d][%d] =\n",i, k, k, j);
+                //printInterval(&L[0]);
+                //printInterval(ptr(A, k, j));
                 mpfi_mul(b, L, ptr(A, k, j));
                 mpfi_add(c, c, b);
             }
             mpfi_sub(sub, ptr(A2, i, j), c);
-            mpfi_mul(sub, sub, sub);
-            mpfi_add(norm, norm, sub);
+            mpfi_mul(tmp, sub, sub);
+            mpfi_add(norm, norm, tmp);
             mpfi_set_str(c, "0", 10);
         }
     }
+
     mpfi_sqrt(norm, norm);
     printf("Norm : ");
     printInterval(&norm[0]);
     mpfi_set_str(norm, "0", 10);
 #endif //DOUBLE
 }
+*/
+void Norm2() {
+#ifdef DOUBLE
+    double *y1;
+    double *x1;
+    //double *y2;
+    double *b1;
+    double mul;
+    double sum;
+    //double y;
+    //double x;
+    double L;
+    double norm = 0.0;
+    y1 = (double *)calloc(N, sizeof(double));
+    x1 = (double *)calloc(N, sizeof(double));
+    //y2 = (double *)calloc(N, sizeof(double));
+    b1 = (double *)calloc(N, sizeof(double));
 
+    for (int i = 0; i < N; i ++) {
+        for (int j = 0; j <= i; j ++) {
+            L = (*ptr(A, j, i)) / (*ptr(A, j, j));
+            mul = L * y1[j];
+            sum += mul;
+        }
+        y1[i] = b[i] - sum;
+        sum = 0;
+    }
+
+    for (int i = N -1; i >= 0; i--) {
+        for (int j = i; j < N; j++) {
+            mul = (*ptr(A, i, j)) * x1[j];
+            sum += mul;
+        }
+        x1[i] = (y1[i] - sum) / (*ptr(A, i, i));
+        sum = 0;
+    }
+
+    for (int i = N -1; i >= 0; i--) {
+        for (int j = i; j < N; j++) {
+            mul = (*ptr(A, i, j)) * x1[j];
+            sum += mul;
+        }
+        y1[i] = sum;
+        sum = 0;
+    }
+
+    for (int i = 0; i < N; i ++) {
+        for (int j = 0; j <= i; j ++) {
+            L = (*ptr(A, j, i)) / (*ptr(A, j, j));
+            //printf("L[%d][%d] = %f\n", i, j, L);
+            mul = L * y1[j];
+            sum += mul;
+        }
+        b1[i] = sum;
+        sum = 0;
+    }
+
+    for (int i = 0; i < N; i++) {
+        //printf("x1[%d] = %f\n", i, x1[i]);
+        //printf("y1[%d] = %f\n", i, y1[i]);
+        //printf("b1[%d] = %f\n", i, b1[i]);
+        norm += (b[i] - b1[i]);
+    }
+    printf("Norm : %f\n ", norm);
+
+#else
+    __mpfi_struct *y1;
+    __mpfi_struct *x1;
+    __mpfi_struct *b1;
+    mpfi_t mul;
+    mpfi_t sum;
+    mpfi_t L;
+    mpfi_t norm;
+    mpfi_t tmp;
+    mpfi_t zero;
+
+    y1 = (__mpfi_struct *)malloc(N * sizeof(__mpfi_struct));
+    x1 = (__mpfi_struct *)malloc(N * sizeof(__mpfi_struct));
+    b1 = (__mpfi_struct *)malloc(N * sizeof(__mpfi_struct));
+
+    mpfi_init2(zero, acc);
+    mpfi_set_str(zero, "0", 10);
+
+    for (int i = 0; i < N; i ++) {
+        mpfi_init2(&y1[i], acc);
+        mpfi_set(&y1[i], zero);
+        mpfi_init2(&x1[i], acc);
+        mpfi_set(&x1[i], zero);
+        mpfi_init2(&b1[i], acc);
+        mpfi_set(&b1[i], zero);
+    }
+
+    mpfi_init2(mul, acc);
+    mpfi_init2(sum, acc);
+    mpfi_init2(L, acc);
+    mpfi_init2(norm, acc);
+    mpfi_init2(tmp, acc);
+
+    mpfi_set(sum, zero);
+    mpfi_set(norm, zero);
+
+    for (int i = 0; i < N; i ++) {
+        for (int j = 0; j <= i; j ++) {
+            //L = (*ptr(A, j, i)) / (*ptr(A, j, j));
+            mpfi_div(L, ptr(A, j, i), ptr(A, j, j));
+            //mul = L * y1[j];
+            mpfi_mul(mul, L, &y1[j]);
+            //sum += mul;
+            mpfi_add(sum, sum, mul);
+        }
+        //y1[i] = b[i] - sum;
+        mpfi_sub(&y1[i], &b[i], sum);
+        //printInterval(&y1[i]);
+        //sum = 0;
+        mpfi_set(sum, zero);
+    }
+
+    //printf("here\n");
+    for (int i = N -1; i >= 0; i--) {
+        for (int j = i; j < N; j++) {
+            //mul = (*ptr(A, i, j)) * x1[j];
+            mpfi_mul(mul, ptr(A, i, j), &x1[j]);
+            //sum += mul;
+            mpfi_add(sum, sum, mul);
+        }
+        //x1[i] = (y1[i] - sum) / (*ptr(A, i, i));
+        mpfi_sub(tmp, &y1[i], sum);
+        mpfi_div(&x1[i], tmp, ptr(A, i, i));
+        //sum = 0;
+        mpfi_set(sum, zero);
+    }
+
+    for (int i = N -1; i >= 0; i--) {
+        for (int j = i; j < N; j++) {
+            //mul = (*ptr(A, i, j)) * x1[j];
+            mpfi_mul(mul, ptr(A, i, j), &x1[j]);
+            //sum += mul;
+            mpfi_add(sum, sum, mul);
+        }
+        //y1[i] = sum;
+        mpfi_set(&y1[i], sum);
+        //sum = 0;
+        mpfi_set(sum, zero);
+    }
+
+    for (int i = 0; i < N; i ++) {
+        for (int j = 0; j <= i; j ++) {
+            //L = (*ptr(A, j, i)) / (*ptr(A, j, j));
+            mpfi_div(L, ptr(A, j, i), ptr(A, j, j));
+            //printf("L[%d][%d] = %f\n", i, j, L);
+            //mul = L * y1[j];
+            mpfi_mul(mul, L, &y1[j]);
+            //sum += mul;
+            mpfi_add(sum, sum, mul);
+        }
+        //b1[i] = sum;
+        mpfi_set(&b1[i], sum);
+        //sum = 0;
+        mpfi_set(sum, zero);
+    }
+
+    for (int i = 0; i < N; i++) {
+        //printf("x1[%d] = %f\n", i, x1[i]);
+        //printf("y1[%d] = %f\n", i, y1[i]);
+        //printf("b1[%d] = %f\n", i, b1[i]);
+        //norm += (b[i] - b1[i]);
+        mpfi_sub(tmp, &b[i], &b1[i]);
+        mpfi_add(norm, norm, tmp);
+        //printInterval(norm);
+    }
+    printf("Norm :");
+    printInterval(norm);
+
+    free(y1);
+    free(x1);
+    free(b1);
+#endif //DOUBLE
+}
 
 void InfoSub(void) {
 #ifdef COUNT

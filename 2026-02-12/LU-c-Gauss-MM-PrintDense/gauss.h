@@ -65,7 +65,9 @@ void InfoSub(void);
 
 void InfoMul(void);
 
-void Norm(void);
+//void Norm(void);
+
+void Norm2(void);
 
 void allocArrays(int size);
 

@@ -47,7 +47,7 @@ int main(int argc, char **argv) {
 	
     //printf("N=%d\n",N);
 
-    printMatrix3();
+    //printMatrix3();
 	
 	clock_gettime(CLOCK_REALTIME, &ts_start);
 	for (int k = 0; k < N; k++) {
@@ -62,10 +62,10 @@ int main(int argc, char **argv) {
 
 #ifdef PRINT
     // printMatrix();
-	printMatrix3();
+	//printMatrix3();
 	//InfoSub();
 	//InfoMul();
-	Norm();
+	Norm2();
 #endif
 
 	printf("\n");
@@ -89,7 +89,7 @@ int main(int argc, char **argv) {
 	//printMatrix3();
 	//InfoSub();
 	//InfoMul();
-	Norm();
+	Norm2();
 #endif // PRINT
 
 	return 0;
