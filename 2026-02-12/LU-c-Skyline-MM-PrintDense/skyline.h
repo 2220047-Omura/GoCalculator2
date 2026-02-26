@@ -105,9 +105,11 @@ void InfoAdd(void);
 
 void InfoMul(void);
 
-void allocArrays(void);
+void freeArrays(void);
 
 // void Norm(void);
+
+void Norm2(void);
 
 void printSquare(void);
 

@@ -52,7 +52,7 @@ int main(int argc, char **argv) {
     for (int a = 1; a < size; a++) {
         l = Dia[a];
         E2 = (size <= a + MAXp) ? E : Dia[a + MAXp];
-        forkjoin(a, l, E2);
+        //forkjoin(a, l, E2);
         //printf("a, l = %d, %d\n",a,l);
         for (int m = l; m < E2; m++){
 		    if (isk[m] == a){
@@ -73,9 +73,10 @@ int main(int argc, char **argv) {
     //Norm();
 
 #ifdef PRINT
-    printSquare();
+    //printSquare();
     //InfoAdd();
     //InfoMul();
+    Norm2();
 #endif
 
     printf("\n");
@@ -102,12 +103,13 @@ int main(int argc, char **argv) {
     //Norm();
 
 #ifdef PRINT
-    printSquare();
+    //printSquare();
     //InfoAdd();
     //InfoMul();
+    Norm2();
 #endif
 
-    allocArrays();
+    freeArrays();
 
     return 0;
 }

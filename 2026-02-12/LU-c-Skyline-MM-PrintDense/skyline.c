@@ -451,7 +451,7 @@ void printInterval2(__mpfi_struct *b) {
     printf("%sx(%d)] ", buf, (int)exp);
 }
 
-void allocArrays() {
+void freeArrays() {
     free(Ask);
     free(Lsk);
     free(SUMsk);
@@ -488,6 +488,216 @@ void InfoAdd(void) {
     printf("average:%f\n", ave);
     printf("variance:%f\n", var);
 #endif //COUNT
+}
+
+void Norm2(void) {
+    int E2;
+#ifdef DOUBLE
+    double *b;
+    b = (double *)calloc(size, sizeof(double));
+    b[0] = 1;
+    for (int i = 1; i < size; i++) {
+        b[i] = 0;
+    }
+
+    double *y1;
+    double *x1;
+    double *b1;
+    double mul;
+    double sum;
+    double L;
+    double norm = 0.0;
+    y1 = (double *)calloc(size, sizeof(double));
+    x1 = (double *)calloc(size, sizeof(double));
+    b1 = (double *)calloc(size, sizeof(double));
+
+    y1[0] = b[0];
+    //printf("y1[%d] = %f\n", 0, y1[0]);
+    for (int i = 1; i < size; i++) {
+        for (int j = Dia[i-1]+1; j <= Dia[i]; j++) {
+            L = Ask[j] / Ask[Dia[isk[j]]];
+            //printf("L : %f\n", L);
+            mul = L * y1[isk[j]];
+            sum += mul;
+        }
+        y1[i] = b[i] - sum;
+        //printf("y1[%d] = %f\n", i, y1[i]);
+        sum = 0;
+    }
+
+    for (int i = size -1; i >= 0; i--) {
+        E2 = (size <= i + MAXp) ? E : Dia[i + MAXp];
+        for (int j = Dia[i]; j < E2; j++) {
+            if (i == isk[j]) {
+                mul = Ask[j] * x1[jsk[j]];
+                sum += mul;
+            }
+        }
+        x1[i] = (y1[i] - sum) / Ask[Dia[i]];
+        //printf("x1[%d] = %f, Ask = %f\n", i, x1[i], Ask[Dia[i]]);
+        sum = 0;
+    }
+
+    for (int i = size -1; i >= 0; i--) {
+        E2 = (size <= i + MAXp) ? E : Dia[i + MAXp];
+        for (int j = Dia[i]; j < E2; j++) {
+            if (i == isk[j]) {
+                mul = Ask[j] * x1[jsk[j]];
+                sum += mul;
+            }
+        }
+        y1[i] = sum;
+        sum = 0;
+    }
+
+    b1[0] = y1[0];
+    for (int i = 1; i < size; i++) {
+        for (int j = Dia[i-1]+1; j <= Dia[i]; j++) {
+            L = Ask[j] / Ask[Dia[isk[j]]];
+            //printf("L : %f\n", L);
+            mul = L * y1[isk[j]];
+            sum += mul;
+        }
+        b1[i] = sum;
+        sum = 0;
+    }
+
+    for (int i = 0; i < size; i++) {
+        //printf("x1[%d] = %f\n", i, x1[i]);
+        //printf("y1[%d] = %f\n", i, y1[i]);
+        //printf("b1[%d] = %f\n", i, b1[i]);
+        norm += (b[i] - b1[i]);
+    }
+    printf("Norm : %f\n ", norm);
+
+#else
+    mpfi_t zero;
+    mpfi_init2(zero, acc);
+    mpfi_set_str(zero, "0", 10);
+
+    __mpfi_struct *b;
+    b = (__mpfi_struct *)malloc(size * sizeof(__mpfi_struct));
+    mpfi_init2(&b[0], acc);
+    mpfi_set_str(&b[0], "1", 10);
+    for (int i = 1; i < size; i++) {
+        mpfi_init2(&b[i], acc);
+        mpfi_set(&b[i], zero);
+    }
+
+    __mpfi_struct *y1;
+    __mpfi_struct *x1;
+    __mpfi_struct *b1;
+    mpfi_t mul;
+    mpfi_t sum;
+    mpfi_t L;
+    mpfi_t norm;
+    mpfi_t tmp;
+
+    y1 = (__mpfi_struct *)malloc(size * sizeof(__mpfi_struct));
+    x1 = (__mpfi_struct *)malloc(size * sizeof(__mpfi_struct));
+    b1 = (__mpfi_struct *)malloc(size * sizeof(__mpfi_struct));
+
+    for (int i = 0; i < size; i ++) {
+        mpfi_init2(&y1[i], acc);
+        mpfi_set(&y1[i], zero);
+        mpfi_init2(&x1[i], acc);
+        mpfi_set(&x1[i], zero);
+        mpfi_init2(&b1[i], acc);
+        mpfi_set(&b1[i], zero);
+    }
+
+    mpfi_init2(mul, acc);
+    mpfi_init2(sum, acc);
+    mpfi_init2(L, acc);
+    mpfi_init2(norm, acc);
+    mpfi_init2(tmp, acc);
+
+    mpfi_set(sum, zero);
+    mpfi_set(norm, zero);
+
+    //y1[0] = b[0];
+    mpfi_set(&y1[0], &b[0]);
+    for (int i = 1; i < size; i++) {
+        for (int j = Dia[i-1]+1; j <= Dia[i]; j++) {
+            //L = Ask[j] / Ask[Dia[isk[j]]];
+            mpfi_div(L, Ask[j], Ask[Dia[isk[j]]]);
+            //mul = L * y1[isk[j]];
+            mpfi_mul(mul, L, &y1[isk[j]]);
+            //sum += mul;
+            mpfi_add(sum, sum, mul);
+        }
+        //y1[i] = b[i] - sum;
+        mpfi_sub(&y1[i], &b[i], sum);
+        //sum = 0;
+        mpfi_set(sum, zero);
+    }
+
+    for (int i = size -1; i >= 0; i--) {
+        E2 = (size <= i + MAXp) ? E : Dia[i + MAXp];
+        for (int j = Dia[i]; j < E2; j++) {
+            if (i == isk[j]) {
+                //mul = Ask[j] * x1[jsk[j]];
+                mpfi_mul(mul, Ask[j], &x1[jsk[j]]);
+                //sum += mul;
+                mpfi_add(sum, sum, mul);
+            }
+        }
+        //x1[i] = (y1[i] - sum) / Ask[Dia[i]];
+        mpfi_sub(tmp, &y1[i], sum);
+        mpfi_div(&x1[i], tmp, Ask[Dia[i]]);
+        //sum = 0;
+        mpfi_set(sum, zero);
+    }
+
+    for (int i = size -1; i >= 0; i--) {
+        E2 = (size <= i + MAXp) ? E : Dia[i + MAXp];
+        for (int j = Dia[i]; j < E2; j++) {
+            if (i == isk[j]) {
+                //mul = Ask[j] * x1[jsk[j]];
+                mpfi_mul(mul, Ask[j], &x1[jsk[j]]);
+                //sum += mul;
+                mpfi_add(sum, sum, mul);
+            }
+        }
+        //y1[i] = sum;
+        mpfi_set(&y1[i], sum);
+        //sum = 0;
+        mpfi_set(sum, zero);
+    }
+
+    //b1[0] = y1[0];
+    mpfi_set(&b1[0], &y1[0]);
+    for (int i = 1; i < size; i++) {
+        for (int j = Dia[i-1]+1; j <= Dia[i]; j++) {
+            //L = Ask[j] / Ask[Dia[isk[j]]];
+            mpfi_div(L, Ask[j], Ask[Dia[isk[j]]]);
+            //mul = L * y1[isk[j]];
+            mpfi_mul(mul, L, &y1[isk[j]]);
+            //sum += mul;
+            mpfi_add(sum, sum, mul);
+        }
+        //b1[i] = sum;
+        mpfi_set(&b1[i], sum);
+        //sum = 0;
+        mpfi_set(sum, zero);
+    }
+
+    for (int i = 0; i < size; i++) {
+        //printf("x1[%d] = %f\n", i, x1[i]);
+        //printf("y1[%d] = %f\n", i, y1[i]);
+        //printf("b1[%d] = %f\n", i, b1[i]);
+        //norm += (b[i] - b1[i]);
+        mpfi_sub(tmp, &b[i], &b1[i]);
+        mpfi_add(norm, norm, tmp);
+    }
+    printf("Norm :");
+    printInterval(norm);
+
+    free(b);
+    free(y1);
+    free(x1);
+    free(b1);
+#endif //DOUBLE
 }
 
 void InfoMul(void) {
@@ -625,7 +835,7 @@ void printSquare() {
 
         // L要素の表示
         for (int n = 0; n < p - prof[Dia[a]]; n++) {
-            printf("%f ",0);
+            printf("%f ",0.0);
         }
         int m = p - prof[Dia[a]];
         if (m < 0) {
@@ -643,7 +853,7 @@ void printSquare() {
             if (isk[n] == a) {
                 j = jsk[n];
                 for (int m = 0; m < j - predj; m++) {
-                    printf("%f ",0);
+                    printf("%f ",0.0);
                 }
                 printf("%f ",Ask[n]);
                 predj = j + 1;
