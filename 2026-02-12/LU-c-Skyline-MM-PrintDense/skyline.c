@@ -3,6 +3,7 @@
 // #include <time.h>
 #include <stdbool.h>
 #include <float.h>
+#include <math.h>
 #include <mpfi.h>
 #include <mpfi_io.h>
 
@@ -33,7 +34,7 @@ double *Lsk;
 double *SUMsk;
 double *MULsk;
 
-// double *Ask2;
+double *Ask2;
 // double *Bsk;
 // double *Xsk;
 #else
@@ -43,7 +44,7 @@ mpfi_t *Lsk;
 mpfi_t *SUMsk;
 mpfi_t *MULsk;
 
-// mpfi_t *Ask2;
+mpfi_t *Ask2;
 // mpfi_t *Bsk;
 // mpfi_t *Xsk;
 #endif //BOUDLE
@@ -164,7 +165,7 @@ int init(void) {
     Lsk = (double *)calloc(E, sizeof(double));
     SUMsk = (double *)calloc(E, sizeof(double));
     MULsk = (double *)calloc(E, sizeof(double));
-    // Ask2 = (double *)malloc(E, sizeof(double));
+    Ask2 = (double *)calloc(E, sizeof(double));
     // Bsk = (double *)malloc(size, sizeof(double));
     // Xsk = (double *)malloc(size, sizeof(double));
 #else
@@ -172,7 +173,7 @@ int init(void) {
     Lsk = (mpfi_t *)malloc(E * sizeof(mpfi_t));
     SUMsk = (mpfi_t *)malloc(E * sizeof(mpfi_t));
     MULsk = (mpfi_t *)malloc(E * sizeof(mpfi_t));
-    // Ask2 = (mpfi_t *)malloc(E * sizeof(mpfi_t));
+    Ask2 = (mpfi_t *)malloc(E * sizeof(mpfi_t));
     // Bsk = (mpfi_t *)malloc(size * sizeof(mpfi_t));
     // Xsk = (mpfi_t *)malloc(size * sizeof(mpfi_t));
 
@@ -181,7 +182,7 @@ int init(void) {
         mpfi_init2(Lsk[i], acc);
         mpfi_init2(SUMsk[i], acc);
         mpfi_init2(MULsk[i], acc);
-        // mpfi_init2(Ask2[i], acc);
+        mpfi_init2(Ask2[i], acc);
     }
     /*
     for (int i = 0; i < size; i++) {
@@ -320,8 +321,10 @@ void setMM() {
             for (int m = z1 +1; m < tmp[n].row; m++) {
 #ifdef DOUBLE
                 Ask[k] = 0;
+                Ask2[k] = 0;
 #else
                 mpfi_interv_fr(Ask[k], zero, zero);
+                mpfi_interv_fr(Ask2[k], zero, zero);
 #endif // DOUBLE
                 isk[k] = m;
                 jsk[k] = tmp[n].col;
@@ -331,10 +334,11 @@ void setMM() {
             }
 #ifdef DOUBLE
             Ask[k] = tmp[n].val;
+            Ask2[k] = tmp[n].val;
 #else
             mpfr_set_d(a, tmp[n].val, MPFR_RNDN);
             mpfi_interv_fr(Ask[k], a, a);
-            // mpfi_interv_fr(Ask2[k], a, a);
+            mpfi_interv_fr(Ask2[k], a, a);
 #endif // DOUBLE
             isk[k] = tmp[n].row;
             z1 = tmp[n].row;
@@ -537,7 +541,7 @@ void Norm2(void) {
         //printf("x1[%d] = %f, Ask = %f\n", i, x1[i], Ask[Dia[i]]);
         sum = 0;
     }
-
+    /*
     for (int i = size -1; i >= 0; i--) {
         E2 = (size <= i + MAXp) ? E : Dia[i + MAXp];
         for (int j = Dia[i]; j < E2; j++) {
@@ -561,14 +565,40 @@ void Norm2(void) {
         b1[i] = sum;
         sum = 0;
     }
+    */
+
+    for (int j = 0; j < MAXp; j++) {
+        if (isk[j] == 0) {
+            mul = Ask[j] * x1[jsk[j]];
+            sum += mul;
+        }
+    }
+    b1[0] = sum;
+    sum = 0;
+
+    for (int i = 1; i < size; i++) {
+        for (int j = Dia[i-1]+1; j < Dia[i]; j++) {
+            mul = Ask2[j] * x1[isk[j]];
+            sum += mul;
+        }
+        E2 = (size <= i + MAXp) ? E : Dia[i + MAXp];
+        for (int j = Dia[i]; j < E2; j++) {
+            if (i == isk[j]) {
+                mul = Ask2[j] * x1[jsk[j]];
+                sum += mul;
+            }
+        }
+        b1[i] = sum;
+        sum = 0;
+    }
 
     for (int i = 0; i < size; i++) {
         //printf("x1[%d] = %f\n", i, x1[i]);
         //printf("y1[%d] = %f\n", i, y1[i]);
-        //printf("b1[%d] = %f\n", i, b1[i]);
-        norm += (b[i] - b1[i]);
+        printf("b1[%d] = %f\n", i, b1[i]);
+        norm += (b[i] - b1[i]) * (b[i] - b1[i]);
     }
-    printf("Norm : %f\n ", norm);
+    printf("Norm : %f\n ", sqrt(norm));
 
 #else
     mpfi_t zero;
@@ -648,7 +678,7 @@ void Norm2(void) {
         //sum = 0;
         mpfi_set(sum, zero);
     }
-
+    /*
     for (int i = size -1; i >= 0; i--) {
         E2 = (size <= i + MAXp) ? E : Dia[i + MAXp];
         for (int j = Dia[i]; j < E2; j++) {
@@ -681,13 +711,51 @@ void Norm2(void) {
         //sum = 0;
         mpfi_set(sum, zero);
     }
+    */
+
+    for (int j = 0; j < MAXp; j++) {
+        if (isk[j] == 0) {
+            //mul = Ask[j] * x1[jsk[j]];
+            mpfi_mul(mul, Ask2[j], &x1[jsk[j]]);
+            //sum += mul;
+            mpfi_add(sum, sum, mul);
+        }
+    }
+    //b1[0] = sum;
+    mpfi_set(&b1[0], sum);
+    //sum = 0;
+    mpfi_set(sum, zero);
+
+    for (int i = 1; i < size; i++) {
+        for (int j = Dia[i-1]+1; j < Dia[i]; j++) {
+            //mul = Ask2[j] * x1[isk[j]];
+            mpfi_mul(mul, Ask2[j], &x1[isk[j]]);
+            //sum += mul;
+            mpfi_add(sum, sum, mul);
+        }
+        E2 = (size <= i + MAXp) ? E : Dia[i + MAXp];
+        for (int j = Dia[i]; j < E2; j++) {
+            if (i == isk[j]) {
+                //mul = Ask2[j] * x1[jsk[j]];
+                mpfi_mul(mul, Ask2[j], &x1[jsk[j]]);
+                //sum += mul;
+                mpfi_add(sum, sum, mul);
+            }
+        }
+        //b1[i] = sum;
+        mpfi_set(&b1[i], sum);
+        //sum = 0;
+        mpfi_set(sum, zero);
+    }
 
     for (int i = 0; i < size; i++) {
         //printf("x1[%d] = %f\n", i, x1[i]);
         //printf("y1[%d] = %f\n", i, y1[i]);
         //printf("b1[%d] = %f\n", i, b1[i]);
+        printInterval(&b1[i]);
         //norm += (b[i] - b1[i]);
         mpfi_sub(tmp, &b[i], &b1[i]);
+        mpfi_mul(tmp, tmp, tmp);
         mpfi_add(norm, norm, tmp);
     }
     printf("Norm :");
