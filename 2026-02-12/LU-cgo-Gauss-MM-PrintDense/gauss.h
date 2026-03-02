@@ -14,7 +14,7 @@
 
 extern int N;
 #define DOUBLE
-#define COUNT
+//#define COUNT
 
 #define ptr(p, i, j) (&(p[(i) * N + (j)]))
 // extern int acc = 1024;
@@ -60,6 +60,8 @@ void LUfact2(int k,int i,int j);
 void printInterval(__mpfi_struct *b);
 
 void printMatrix3(void);
+
+void Norm2(void);
 
 void InfoSub(void);
 

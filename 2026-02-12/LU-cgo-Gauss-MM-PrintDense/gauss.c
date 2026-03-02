@@ -6,6 +6,7 @@
 #include <mpfi_io.h>
 //#include <mpfr.h>
 #include <float.h>
+#include <math.h>
 
 #include "gauss.h"
 
@@ -27,10 +28,12 @@ bool boolsk = true;
 double *A;
 double *b;
 double *calc;
+double *A2;
 #else
 __mpfi_struct *A;
 __mpfi_struct *b;
 __mpfi_struct *calc;
+__mpfi_struct *A2;
 #endif // DOUBLE
 
 #ifdef COUNT
@@ -86,7 +89,7 @@ void printMatrix(__mpfi_struct *array) {
 */
 int init(void) {
     getN();
-    printf("N = %d\n",N);
+    //printf("N = %d\n",N);
 /*
 #ifdef DOUBLE
     double a;
@@ -101,10 +104,12 @@ int init(void) {
     A = (double *)calloc(N * N, sizeof(double));
     b = (double *)calloc(N, sizeof(double));
     calc = (double *)calloc(N * N, sizeof(double));
+    A2 = (double *)calloc(N * N, sizeof(double));
 #else
     A = (__mpfi_struct *)malloc(N * N * sizeof(__mpfi_struct));
     b = (__mpfi_struct *)malloc(N * sizeof(__mpfi_struct));
     calc = (__mpfi_struct *)malloc(N * N * sizeof(__mpfi_struct));
+    A2 = (__mpfi_struct *)malloc(N * N * sizeof(__mpfi_struct));
 #endif // DOUBLE
 
 #ifdef COUNT
@@ -122,6 +127,7 @@ int init(void) {
 #ifdef DOUBLE
 #else
             mpfi_init2(ptr(A, i, j), acc);
+            mpfi_init2(ptr(A2, i, j), acc);
             mpfi_init2(ptr(calc, i, j), acc);
 #endif // DOUBLE
         }
@@ -130,20 +136,22 @@ int init(void) {
         for (int j = 0; j < N; j++) {
 #ifdef DOUBLE
         *ptr(A,i,j) = 0;
+        *ptr(A2,i,j) = 0;
 #else
         mpfi_set_str(ptr(A,i,j), "0", 10);
+        mpfi_set_str(ptr(A2,i,j), "0", 10);
 #endif // DOUBLE
         }
     }
 	return 0;
 }
 
-typedef struct
-{
-    int row;
-    int col;
-    double val;
-} Entry;
+// typedef struct
+// {
+//     int row;
+//     int col;
+//     double val;
+// } Entry;
 
 void setMM() {
 #ifdef DOUBLE
@@ -180,7 +188,7 @@ void setMM() {
     }
 
     /* この列の非ゼロ要素を一時保存 */
-    Entry *tmp = malloc(nnz * sizeof(Entry));
+    //Entry *tmp = malloc(nnz * sizeof(Entry));
 
     // printf("in setMM\n");
     for (int n = 0; n < nnz; n++)
@@ -189,21 +197,35 @@ void setMM() {
         double val;
         fgets(line, sizeof(line), fp);
         sscanf(line, "%d %d %lf", &i, &j, &val);
-        //printf("n, i, j = %d,%d,%d\n",n,i-1,j-1);
-        tmp[n].row = i - 1; /* 0 始まり */
-        tmp[n].col = j - 1;
-        tmp[n].val = val;
-        //("%lf\n",val);
+#ifdef DOUBLE
+        *ptr(A, i-1, j-1) = val;
+        *ptr(A, j-1, i-1) = val;
+        *ptr(A2, i-1, j-1) = val;
+        *ptr(A2, j-1, i-1) = val;
+#else
+        mpfr_set_d(a, val, MPFR_RNDN);
+        mpfi_interv_fr(ptr(A, i-1, j-1), a, a);
+        mpfi_interv_fr(ptr(A, j-1, i-1), a, a);
+        mpfi_interv_fr(ptr(A2, i-1, j-1), a, a);
+        mpfi_interv_fr(ptr(A2, j-1, i-1), a, a);
+#endif //DOUBLE
+        ////printf("n, i, j = %d,%d,%d\n",n,i-1,j-1);
+        // tmp[n].row = i - 1; /* 0 始まり */
+        // tmp[n].col = j - 1;
+        // tmp[n].val = val;
+        ////("%lf\n",val);
     }
 
-    for (int n = 0; n < nnz; n++) {
-#ifdef DOUBLE
-        *ptr(A,tmp[n].col,tmp[n].row) = tmp[n].val;
-#else
-        mpfr_set_d(a, tmp[n].val, MPFR_RNDN);
-        mpfi_interv_fr(ptr(A, tmp[n].col, tmp[n].row), a, a);
-#endif // DOUBLE
-    }
+//     for (int n = 0; n < nnz; n++) {
+// #ifdef DOUBLE
+//         *ptr(A,tmp[n].row,tmp[n].col) = tmp[n].val;
+//         *ptr(A2,tmp[n].row,tmp[n].col) = tmp[n].val;
+// #else
+//         mpfr_set_d(a, tmp[n].val, MPFR_RNDN);
+//         mpfi_interv_fr(ptr(A, tmp[n].row, tmp[n].col), a, a);
+//         mpfi_interv_fr(ptr(A2, tmp[n].row, tmp[n].col), a, a);
+// #endif // DOUBLE
+//     }
     /*
     for (int n = 0; n < nnz; n++) {
         if (tmp[n].row <= tmp[n].col) {
@@ -372,6 +394,236 @@ void printMatrix3(void) {
         }
         printf("\n");
     }
+}
+
+void Norm2() {
+#ifdef DOUBLE
+    double *y1;
+    double *x1;
+    //double *y2;
+    double *b1;
+    double mul;
+    double sum;
+    //double y;
+    //double x;
+    double L;
+    //double tmp;
+    double norm = 0.0;
+    y1 = (double *)calloc(N, sizeof(double));
+    x1 = (double *)calloc(N, sizeof(double));
+    //y2 = (double *)calloc(N, sizeof(double));
+    b1 = (double *)calloc(N, sizeof(double));
+
+    for (int i = 0; i < N; i ++) {
+        for (int j = 0; j <= i; j ++) {
+            L = (*ptr(A, j, i)) / (*ptr(A, j, j));
+            mul = L * y1[j];
+            sum += mul;
+        }
+        y1[i] = b[i] - sum;
+        //printf("y1[%d] = %f\n", i, y1[i]);
+        sum = 0;
+    }
+
+    for (int i = N -1; i >= 0; i--) {
+        for (int j = i; j < N; j++) {
+            mul = (*ptr(A, i, j)) * x1[j];
+            sum += mul;
+        }
+        x1[i] = (y1[i] - sum) / (*ptr(A, i, i));
+        //printf("x1[%d] = %f, A = %f\n", i, x1[i], (*ptr(A, i, i)));
+        sum = 0;
+    }
+
+    /*
+    for (int i = N -1; i >= 0; i--) {
+        for (int j = i; j < N; j++) {
+            mul = (*ptr(A, i, j)) * x1[j];
+            sum += mul;
+        }
+        y1[i] = sum;
+        sum = 0;
+    }
+
+    for (int i = 0; i < N; i ++) {
+        for (int j = 0; j <= i; j ++) {
+            L = (*ptr(A, j, i)) / (*ptr(A, j, j));
+            //printf("L[%d][%d] = %f\n", i, j, L);
+            mul = L * y1[j];
+            sum += mul;
+        }
+        b1[i] = sum;
+        sum = 0;
+    }
+    */
+
+    /*
+    for (int i = 0; i < N; i++) {
+        for (int j = i; j < N; j++) {
+            mul = (*ptr(A, i, j)) * x1[j];
+            sum += mul;
+        }
+        y1[i] = sum;
+        sum = 0;
+    }
+
+    for (int i = 0; i < N; i ++) {
+        for (int j = 0; j <= i; j ++) {
+            L = (*ptr(A, j, i)) / (*ptr(A, j, j));
+            mul = L * y1[j];
+            sum += mul;
+        }
+        b1[i] = sum;
+        sum = 0;
+    }
+    */
+
+    for (int i = 0; i < N; i++) {
+        for (int j = 0; j < N; j++) {
+            mul = (*ptr(A2, i, j)) * x1[j];
+            sum += mul;
+        }
+        b1[i] = sum;
+        sum = 0;
+    }
+
+    for (int i = 0; i < N; i++) {
+        //printf("x1[%d] = %f\n", i, x1[i]);
+        //printf("y1[%d] = %f\n", i, y1[i]);
+        //printf("b1[%d] = %f\n", i, b1[i]);
+        norm += (b[i] - b1[i]) * (b[i] - b1[i]);
+    }
+    printf("Norm : %f\n ", sqrt(norm));
+
+#else
+    __mpfi_struct *y1;
+    __mpfi_struct *x1;
+    __mpfi_struct *b1;
+    mpfi_t mul;
+    mpfi_t sum;
+    mpfi_t L;
+    mpfi_t norm;
+    mpfi_t tmp;
+    mpfi_t zero;
+
+    y1 = (__mpfi_struct *)malloc(N * sizeof(__mpfi_struct));
+    x1 = (__mpfi_struct *)malloc(N * sizeof(__mpfi_struct));
+    b1 = (__mpfi_struct *)malloc(N * sizeof(__mpfi_struct));
+
+    mpfi_init2(zero, acc);
+    mpfi_set_str(zero, "0", 10);
+
+    for (int i = 0; i < N; i ++) {
+        mpfi_init2(&y1[i], acc);
+        mpfi_set(&y1[i], zero);
+        mpfi_init2(&x1[i], acc);
+        mpfi_set(&x1[i], zero);
+        mpfi_init2(&b1[i], acc);
+        mpfi_set(&b1[i], zero);
+    }
+
+    mpfi_init2(mul, acc);
+    mpfi_init2(sum, acc);
+    mpfi_init2(L, acc);
+    mpfi_init2(norm, acc);
+    mpfi_init2(tmp, acc);
+
+    mpfi_set(sum, zero);
+    mpfi_set(norm, zero);
+
+    for (int i = 0; i < N; i ++) {
+        for (int j = 0; j <= i; j ++) {
+            //L = (*ptr(A, j, i)) / (*ptr(A, j, j));
+            mpfi_div(L, ptr(A, j, i), ptr(A, j, j));
+            //mul = L * y1[j];
+            mpfi_mul(mul, L, &y1[j]);
+            //sum += mul;
+            mpfi_add(sum, sum, mul);
+        }
+        //y1[i] = b[i] - sum;
+        mpfi_sub(&y1[i], &b[i], sum);
+        //printInterval(&y1[i]);
+        //sum = 0;
+        mpfi_set(sum, zero);
+    }
+
+    for (int i = N -1; i >= 0; i--) {
+        for (int j = i; j < N; j++) {
+            //mul = (*ptr(A, i, j)) * x1[j];
+            mpfi_mul(mul, ptr(A, i, j), &x1[j]);
+            //sum += mul;
+            mpfi_add(sum, sum, mul);
+        }
+        //x1[i] = (y1[i] - sum) / (*ptr(A, i, i));
+        mpfi_sub(tmp, &y1[i], sum);
+        mpfi_div(&x1[i], tmp, ptr(A, i, i));
+        //sum = 0;
+        mpfi_set(sum, zero);
+    }
+
+    /*
+    for (int i = N -1; i >= 0; i--) {
+        for (int j = i; j < N; j++) {
+            //mul = (*ptr(A, i, j)) * x1[j];
+            mpfi_mul(mul, ptr(A, i, j), &x1[j]);
+            //sum += mul;
+            mpfi_add(sum, sum, mul);
+        }
+        //y1[i] = sum;
+        mpfi_set(&y1[i], sum);
+        //sum = 0;
+        mpfi_set(sum, zero);
+    }
+
+    for (int i = 0; i < N; i ++) {
+        for (int j = 0; j <= i; j ++) {
+            //L = (*ptr(A, j, i)) / (*ptr(A, j, j));
+            mpfi_div(L, ptr(A, j, i), ptr(A, j, j));
+            //printf("L[%d][%d] = %f\n", i, j, L);
+            //mul = L * y1[j];
+            mpfi_mul(mul, L, &y1[j]);
+            //sum += mul;
+            mpfi_add(sum, sum, mul);
+        }
+        //b1[i] = sum;
+        mpfi_set(&b1[i], sum);
+        //sum = 0;
+        mpfi_set(sum, zero);
+    }
+    */
+
+    for (int i = 0; i < N; i++) {
+        for (int j = 0; j < N; j++) {
+            //mul = (*ptr(A2, i, j)) * x1[j];
+            mpfi_mul(mul, ptr(A2, i, j), &x1[j]);
+            //sum += mul;
+            mpfi_add(sum, sum, mul);
+        }
+        //b1[i] = sum;
+        mpfi_set(&b1[i], sum);
+        //sum = 0;
+        mpfi_set(sum, zero);
+    }
+
+    for (int i = 0; i < N; i++) {
+        //printf("x1[%d] = %f\n", i, x1[i]);
+        //printf("y1[%d] = %f\n", i, y1[i]);
+        //printf("b1[%d] = %f\n", i, b1[i]);
+        printInterval(&b1[i]);
+        //norm += (b[i] - b1[i]);
+        mpfi_sub(tmp, &b[i], &b1[i]);
+        mpfi_mul(tmp, tmp, tmp);
+        mpfi_add(norm, norm, tmp);
+        //printInterval(norm);
+    }
+    mpfi_sqrt(norm, norm);
+    printf("Norm :");
+    printInterval(norm);
+
+    free(y1);
+    free(x1);
+    free(b1);
+#endif //DOUBLE
 }
 
 void InfoSub(void) {
