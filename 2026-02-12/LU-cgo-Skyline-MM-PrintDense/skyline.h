@@ -13,7 +13,7 @@
 //void comp(void);
 
 #define DOUBLE
-#define COUNT
+//#define COUNT
 #define PRINT
 
 extern int size;     // 行列サイズ（列数）
@@ -117,9 +117,9 @@ void InfoAdd(void);
 
 void InfoMul(void);
 
-void allocArrays(void);
+void freeArrays(void);
 
-// void Norm(void);
+void Norm2(void);
 
 void printSquare(void);
 

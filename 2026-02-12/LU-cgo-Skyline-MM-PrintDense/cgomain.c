@@ -49,12 +49,13 @@ int main(int argc, char **argv) {
 #endif //PRINT
 
 	//printMatrix3();
+/*
 #ifdef PRINT
     printf("single thread execution\n");
 #endif
 
     clock_gettime(CLOCK_REALTIME, &ts_start);
-    /*
+
     for (int a = 1; a < size; a++) {
         l = Dia[a];
         //printf("a, l = %d, %d\n",a,l);
@@ -65,7 +66,7 @@ int main(int argc, char **argv) {
 		    }
 	    }
     }
-    */
+    
     clock_gettime(CLOCK_REALTIME, &ts_stop);
     t_diff = (ts_stop.tv_sec - ts_start.tv_sec)
            + (ts_stop.tv_nsec - ts_start.tv_nsec) / 1e9;
@@ -73,15 +74,14 @@ int main(int argc, char **argv) {
     //printf("[%s] single size=%d time=%f\n", title, size, t_diff);
 
 
-    //Norm();
 #ifdef PRINT
-    printSquare();
+    //printSquare();
     //InfoAdd();
     //InfoMul();
+    Norm2();
 #endif
 
-    printf("\n");
-
+*/
     printf("multithreaded execution\n");
     srand(0);
     reset();
@@ -89,7 +89,10 @@ int main(int argc, char **argv) {
     defE(E);
 
     int E2;
+
+#ifdef COUNT
     printf("row, Ngo, ave, var\n");
+#endif //COUNT
 
     clock_gettime(CLOCK_REALTIME, &ts_start);
     for (int i = 0; i < E; i ++) {
@@ -119,15 +122,14 @@ int main(int argc, char **argv) {
 
     printf("[%s] multi size=%d time=%f\n", title, size, t_diff);
 
-    //Norm();
-
 #ifdef PRINT
-    printSquare();
+    //printSquare();
     //InfoAdd();
     //InfoMul();
+    Norm2();
 #endif
 
-    allocArrays();
+    freeArrays();
 
     return 0;
 }

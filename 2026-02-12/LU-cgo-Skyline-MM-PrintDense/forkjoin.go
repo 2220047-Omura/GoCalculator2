@@ -68,7 +68,7 @@ func forkjoinCount(a int, l int) {
 			Ngo += 1
 		}
 	}
-	wg.Wait()
+	//wg.Wait()
 	sum := C.getS(C.int(a))
 	sumSQ := C.getS2(C.int(a))
 	//fmt.Println("row:", a, "S:", sgo, "cgo:", cgo, "cgo2:",cgo2)
@@ -93,7 +93,6 @@ var profL int
 
 //export forkjoin2
 func forkjoin2(a int, l int, E2 int) {
-
 	for m := l; m < E2; m++ {
 		if isk[m] == a {
 			//profM := C.getprof(C.int(m))
