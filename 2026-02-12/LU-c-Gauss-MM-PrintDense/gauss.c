@@ -111,7 +111,11 @@ int init(void) {
     calc = (__mpfi_struct *)malloc(N * N * sizeof(__mpfi_struct));
     A2 = (__mpfi_struct *)malloc(N * N * sizeof(__mpfi_struct));
 #endif // DOUBLE
-
+    // printf("ポインタA：%p\n", A);
+    // printf("ポインタb：%p\n", b);
+    // printf("ポインタcalc：%p\n", calc);
+    // printf("ポインタA2：%p\n", A2);
+    // printf("A(99999, 99999) = %f\n", *ptr(A, N, N));
 #ifdef COUNT
     countSub = (int *)calloc(N * N, sizeof(int));
     countMul = (int *)calloc(N * N, sizeof(int));
@@ -191,13 +195,14 @@ void setMM() {
     //Entry *tmp = malloc(nnz * sizeof(Entry));
 
     // printf("in setMM\n");
+    int i, j;
+    double val;
     for (int n = 0; n < nnz; n++)
     {
-        int i, j;
-        double val;
         fgets(line, sizeof(line), fp);
         sscanf(line, "%d %d %lf", &i, &j, &val);
 #ifdef DOUBLE
+        //printf("%d, %d\n", i, j);
         *ptr(A, i-1, j-1) = val;
         *ptr(A, j-1, i-1) = val;
         *ptr(A2, i-1, j-1) = val;
@@ -686,10 +691,12 @@ void Norm2() {
         printInterval(&b1[i]);
         //norm += (b[i] - b1[i]);
         mpfi_sub(tmp, &b[i], &b1[i]);
-        mpfi_mul(tmp, tmp, tmp);
+        //mpfi_mul(tmp, tmp, tmp);
+        mpfi_sqr(tmp, tmp);
         mpfi_add(norm, norm, tmp);
         //printInterval(norm);
     }
+    mpfi_sqrt(norm, norm);
     printf("Norm :");
     printInterval(norm);
 
