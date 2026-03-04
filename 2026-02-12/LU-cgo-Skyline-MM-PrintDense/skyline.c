@@ -276,6 +276,7 @@ void setMM() {
         double val;
         fgets(line, sizeof(line), fp);
         sscanf(line, "%d %d %lf", &i, &j, &val);
+        //printf("i, j = %d, %d\n", i,j);
         if (i > j) {
             tmp[n].col = i - 1;
             tmp[n].row = j - 1;
@@ -313,6 +314,7 @@ void setMM() {
     mpfr_set_str(zero, "0",10, MPFR_RNDN);
 #endif // DOUBLE
 
+    // printf("nnz = %d, E = %d\n", nnz, E);
     for (int n = 0; n < nnz; n++)
     {
         if (tmp[n].row <= tmp[n].col)
@@ -334,6 +336,11 @@ void setMM() {
 #ifdef DOUBLE
             Ask[k] = tmp[n].val;
             Ask2[k] = tmp[n].val;
+            // if (n == 179426) {
+            //     // printf("tmp[n] = %f\n", tmp[n].val);
+            //     // printf("Ask[k] = %f\n", Ask[k]);
+            //     printf("n, k = %d, %d\n",n,k);
+            // }
 #else
             mpfr_set_d(a, tmp[n].val, MPFR_RNDN);
             mpfi_interv_fr(Ask[k], a, a);
@@ -363,6 +370,8 @@ void setMM() {
     arrM = (int *)malloc((MAXp + 1) * sizeof(int));
     free(tmp);
     fclose(fp);
+    //printf("here\n");
+    //printf("%f\n", Ask[E]);
 }
 
 void reset() {

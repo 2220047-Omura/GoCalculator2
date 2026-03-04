@@ -12,7 +12,7 @@
 //void printInterval(__mpfi_struct *b);
 //void comp(void);
 
-#define DOUBLE
+//#define DOUBLE
 //#define COUNT
 #define PRINT
 

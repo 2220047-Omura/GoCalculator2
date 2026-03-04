@@ -123,7 +123,7 @@ int main(int argc, char **argv) {
     printf("[%s] multi size=%d time=%f\n", title, size, t_diff);
 
 #ifdef PRINT
-    //printSquare();
+    printSquare();
     //InfoAdd();
     //InfoMul();
     Norm2();
