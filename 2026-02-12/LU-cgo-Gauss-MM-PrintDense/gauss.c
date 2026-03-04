@@ -609,10 +609,11 @@ void Norm2() {
         //printf("x1[%d] = %f\n", i, x1[i]);
         //printf("y1[%d] = %f\n", i, y1[i]);
         //printf("b1[%d] = %f\n", i, b1[i]);
-        printInterval(&b1[i]);
+        //printInterval(&b1[i]);
         //norm += (b[i] - b1[i]);
         mpfi_sub(tmp, &b[i], &b1[i]);
-        mpfi_mul(tmp, tmp, tmp);
+        //mpfi_mul(tmp, tmp, tmp);
+        mpfi_sqr(tmp, tmp);
         mpfi_add(norm, norm, tmp);
         //printInterval(norm);
     }
