@@ -47,7 +47,7 @@ int main(int argc, char **argv) {
 
 	//printMatrix3();
 
-    
+    /*
     clock_gettime(CLOCK_REALTIME, &ts_start);
     for (int a = 1; a < size; a++) {
         l = Dia[a];
@@ -67,7 +67,7 @@ int main(int argc, char **argv) {
            + (ts_stop.tv_nsec - ts_start.tv_nsec) / 1e9;
 
     printf("[%s] single size=%d time=%f\n", title, size, t_diff);
-    
+    */
     // printMatrix3();
 
     //Norm();
@@ -103,7 +103,7 @@ int main(int argc, char **argv) {
     //Norm();
 
 #ifdef PRINT
-    //printSquare();
+    printSquare();
     //InfoAdd();
     //InfoMul();
     Norm2();

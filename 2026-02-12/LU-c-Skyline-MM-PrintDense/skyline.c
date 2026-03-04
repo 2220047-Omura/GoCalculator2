@@ -152,7 +152,10 @@ int init(void) {
     getNnz();
 
     Dia = malloc(size * sizeof(int));
+    printf("here1\n");
     isk = malloc(E * sizeof(int));
+    printf("isk%p\n", isk);
+    printf("E = %d\n", E);
     jsk = malloc(E * sizeof(int));
     prof = malloc(E * sizeof(int));
     if (!isk) {
@@ -595,7 +598,7 @@ void Norm2(void) {
     for (int i = 0; i < size; i++) {
         //printf("x1[%d] = %f\n", i, x1[i]);
         //printf("y1[%d] = %f\n", i, y1[i]);
-        printf("b1[%d] = %f\n", i, b1[i]);
+        //printf("b1[%d] = %f\n", i, b1[i]);
         norm += (b[i] - b1[i]) * (b[i] - b1[i]);
     }
     printf("Norm : %f\n ", sqrt(norm));
@@ -713,8 +716,11 @@ void Norm2(void) {
     }
     */
 
+    //printf("---%d---\n", 0);
     for (int j = 0; j < MAXp; j++) {
         if (isk[j] == 0) {
+            //printf("x1[%d]*", jsk[j]);
+            //printInterval(Ask2[j]);
             //mul = Ask[j] * x1[jsk[j]];
             mpfi_mul(mul, Ask2[j], &x1[jsk[j]]);
             //sum += mul;
@@ -727,7 +733,10 @@ void Norm2(void) {
     mpfi_set(sum, zero);
 
     for (int i = 1; i < size; i++) {
+        //printf("\n---%d---\n", i);
         for (int j = Dia[i-1]+1; j < Dia[i]; j++) {
+            //printf("x1[%d]*", isk[j]);
+            //printInterval(Ask2[j]);
             //mul = Ask2[j] * x1[isk[j]];
             mpfi_mul(mul, Ask2[j], &x1[isk[j]]);
             //sum += mul;
@@ -736,6 +745,8 @@ void Norm2(void) {
         E2 = (size <= i + MAXp) ? E : Dia[i + MAXp];
         for (int j = Dia[i]; j < E2; j++) {
             if (i == isk[j]) {
+                //printf("x1[%d]*", jsk[j]);
+                //printInterval(Ask2[j]);
                 //mul = Ask2[j] * x1[jsk[j]];
                 mpfi_mul(mul, Ask2[j], &x1[jsk[j]]);
                 //sum += mul;
@@ -752,12 +763,13 @@ void Norm2(void) {
         //printf("x1[%d] = %f\n", i, x1[i]);
         //printf("y1[%d] = %f\n", i, y1[i]);
         //printf("b1[%d] = %f\n", i, b1[i]);
-        printInterval(&b1[i]);
+        //printInterval(&b1[i]);
         //norm += (b[i] - b1[i]);
         mpfi_sub(tmp, &b[i], &b1[i]);
         mpfi_mul(tmp, tmp, tmp);
         mpfi_add(norm, norm, tmp);
     }
+    mpfi_sqrt(norm, norm);
     printf("Norm :");
     printInterval(norm);
 
