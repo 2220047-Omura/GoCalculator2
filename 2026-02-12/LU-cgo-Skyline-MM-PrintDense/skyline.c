@@ -936,7 +936,8 @@ void Norm2(void) {
         //printInterval(&b1[i]);
         //norm += (b[i] - b1[i]);
         mpfi_sub(tmp, &b[i], &b1[i]);
-        mpfi_mul(tmp, tmp, tmp);
+        //mpfi_mul(tmp, tmp, tmp);
+        mpfi_sqr(tmp, tmp);
         mpfi_add(norm, norm, tmp);
     }
     mpfi_sqrt(norm, norm);
